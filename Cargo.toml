@@ -3,6 +3,7 @@ name = "mouse-keyboard-input"
 version = "0.1.0"
 authors = ["fulara <ntszar@gmail.com>"]
 build = "build.rs"
+edition = "2018"
 
 [dependencies]
 winapi = "0.2"
