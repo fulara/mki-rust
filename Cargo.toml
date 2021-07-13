@@ -5,6 +5,8 @@ authors = ["fulara <ntszar@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+parking_lot = "0.11"
+lazy_static = "1"
 libc = "0.2"
 
 [target.'cfg(windows)'.dependencies]
