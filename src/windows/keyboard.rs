@@ -1,4 +1,3 @@
-
 use winapi::*;
 
 use std::mem::{size_of, transmute_copy};
@@ -44,8 +43,8 @@ pub fn send_key_stroke(p: Keys) {
             type_: INPUT_KEYBOARD,
             u: transmute_copy(&KEYBDINPUT {
                 wVk: get_vk_code(p) as WORD, // 'a' key
-                wScan: 0, // 0 := hardware scan code for a key
-                dwFlags: 0, // 0 := a key press
+                wScan: 0,                    // 0 := hardware scan code for a key
+                dwFlags: 0,                  // 0 := a key press
                 time: 0,
                 dwExtraInfo: 0,
             }),
