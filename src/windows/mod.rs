@@ -2,18 +2,16 @@ use std::mem::MaybeUninit;
 use std::ptr::null_mut;
 use std::thread;
 use std::thread::JoinHandle;
-use user32::{CallNextHookEx, GetMessageW, SetWindowsHookExW};
-use winapi::HINSTANCE;
-use winapi::MSG;
-use winapi::WH_KEYBOARD_LL;
-use winapi::{HHOOK, LPARAM, LRESULT, WPARAM};
+use winapi::shared::minwindef::{HINSTANCE, LPARAM, LRESULT, WPARAM};
+use winapi::shared::windef::HHOOK__;
+use winapi::um::winuser::{CallNextHookEx, GetMessageW, SetWindowsHookExW, MSG, WH_KEYBOARD_LL};
 
 pub mod hotkey;
 pub mod keyboard;
 pub mod mouse;
 
 struct Listener {
-    keybd_hook_address: HHOOK,
+    keybd_hook_address: *mut HHOOK__,
 
     handle: JoinHandle<()>,
 }
@@ -42,7 +40,7 @@ impl Listener {
 fn install_hook(
     hook_id: libc::c_int,
     hook_proc: unsafe extern "system" fn(libc::c_int, WPARAM, LPARAM) -> LRESULT,
-) -> HHOOK {
+) -> *mut HHOOK__ {
     unsafe { SetWindowsHookExW(hook_id, Some(hook_proc), 0 as HINSTANCE, 0) }
 }
 

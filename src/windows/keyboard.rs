@@ -1,8 +1,7 @@
-use winapi::*;
-
 use crate::KeybdKey;
 use std::mem::{size_of, transmute_copy};
-use user32::SendInput;
+use winapi::shared::minwindef::WORD;
+use winapi::um::winuser::{SendInput, INPUT, INPUT_KEYBOARD, KEYBDINPUT, LPINPUT};
 
 pub fn send_key_stroke(p: KeybdKey) {
     unsafe {
@@ -17,7 +16,7 @@ pub fn send_key_stroke(p: KeybdKey) {
             }),
         };
 
-        SendInput(1, &mut x as LPINPUT, size_of::<INPUT>() as c_int);
+        SendInput(1, &mut x as LPINPUT, size_of::<INPUT>() as libc::c_int);
     }
 }
 
