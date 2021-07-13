@@ -1,8 +1,11 @@
 use std::mem::{size_of, transmute_copy};
-use user32::{GetKeyState, SendInput};
 
 use crate::MouseButton;
-use winapi::*;
+use winapi::um::winuser::{
+    GetKeyState, SendInput, INPUT, INPUT_MOUSE, LPINPUT, MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP,
+    MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP,
+    MOUSEINPUT, VK_LBUTTON, VK_MBUTTON, VK_RBUTTON,
+};
 
 fn mouse_interact_with(interaction: u32) {
     unsafe {
@@ -18,7 +21,7 @@ fn mouse_interact_with(interaction: u32) {
             }),
         };
 
-        SendInput(1, &mut x as LPINPUT, size_of::<INPUT>() as c_int);
+        SendInput(1, &mut x as LPINPUT, size_of::<INPUT>() as libc::c_int);
     }
 }
 
