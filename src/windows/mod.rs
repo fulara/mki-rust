@@ -1,9 +1,10 @@
+use std::mem::MaybeUninit;
 use std::ptr::null_mut;
-use std::sync::atomic::AtomicPtr;
 use std::thread;
 use std::thread::JoinHandle;
-use user32::{CallNextHookEx, SetWindowsHookExW};
+use user32::{CallNextHookEx, GetMessageW, SetWindowsHookExW};
 use winapi::HINSTANCE;
+use winapi::MSG;
 use winapi::WH_KEYBOARD_LL;
 use winapi::{HHOOK, LPARAM, LRESULT, WPARAM};
 
@@ -18,7 +19,7 @@ struct Listener {
 }
 
 impl Listener {
-    pub fn new() -> Self {
+    pub fn new(callback: impl Fn() -> bool + Send + Sync) -> Self {
         let keybd_hook_address = install_hook(WH_KEYBOARD_LL, keybd_hook);
         Listener {
             keybd_hook_address,
@@ -29,7 +30,11 @@ impl Listener {
     fn start_listening_thread() -> JoinHandle<()> {
         thread::Builder::new()
             .name("win-lstn".into())
-            .spawn(|| {})
+            .spawn(|| loop {
+                let mut msg: MSG = unsafe { MaybeUninit::zeroed().assume_init() };
+                unsafe { GetMessageW(&mut msg, null_mut(), 0, 0) };
+                println!("Received message in GetMessageW")
+            })
             .unwrap()
     }
 }
