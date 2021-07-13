@@ -1,5 +1,5 @@
 use std::mem::{size_of, transmute_copy};
-use user32::SendInput;
+use user32::{GetKeyState, SendInput};
 
 use crate::MouseButton;
 use winapi::*;
@@ -47,4 +47,13 @@ pub fn mouse_click(button: MouseButton) {
         MouseButton::Middle => MOUSEEVENTF_MIDDLEUP,
     };
     mouse_interact_with(interaction)
+}
+
+pub fn mouse_is_down(button: MouseButton) -> bool {
+    let vk = match button {
+        MouseButton::Left => VK_LBUTTON,
+        MouseButton::Right => VK_RBUTTON,
+        MouseButton::Middle => VK_MBUTTON,
+    };
+    unsafe { i32::from(GetKeyState(vk)) & 0x8000 != 0 }
 }
