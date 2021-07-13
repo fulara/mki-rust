@@ -1,6 +1,7 @@
 use std::mem::{size_of, transmute_copy};
 use user32::SendInput;
 
+use crate::MouseButton;
 use winapi::*;
 
 fn mouse_interact_with(interaction: u32) {
@@ -21,26 +22,29 @@ fn mouse_interact_with(interaction: u32) {
     }
 }
 
-pub fn mouse_click_left() {
-    mouse_interact_with(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP);
+pub fn mouse_down(button: MouseButton) {
+    let interaction = match button {
+        MouseButton::Left => MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP,
+        MouseButton::Right => MOUSEEVENTF_RIGHTDOWN | MOUSEEVENTF_RIGHTUP,
+        MouseButton::Middle => MOUSEEVENTF_MIDDLEDOWN | MOUSEEVENTF_MIDDLEUP,
+    };
+    mouse_interact_with(interaction)
 }
 
-pub fn mouse_down_left() {
-    mouse_interact_with(MOUSEEVENTF_LEFTDOWN);
+pub fn mouse_up(button: MouseButton) {
+    let interaction = match button {
+        MouseButton::Left => MOUSEEVENTF_LEFTUP,
+        MouseButton::Right => MOUSEEVENTF_RIGHTUP,
+        MouseButton::Middle => MOUSEEVENTF_MIDDLEUP,
+    };
+    mouse_interact_with(interaction)
 }
 
-pub fn mouse_up_left() {
-    mouse_interact_with(MOUSEEVENTF_LEFTUP);
-}
-
-pub fn mouse_click_right() {
-    mouse_interact_with(MOUSEEVENTF_RIGHTDOWN | MOUSEEVENTF_RIGHTUP);
-}
-
-pub fn mouse_down_right() {
-    mouse_interact_with(MOUSEEVENTF_RIGHTDOWN);
-}
-
-pub fn mouse_up_right() {
-    mouse_interact_with(MOUSEEVENTF_RIGHTUP);
+pub fn mouse_click(button: MouseButton) {
+    let interaction = match button {
+        MouseButton::Left => MOUSEEVENTF_LEFTUP,
+        MouseButton::Right => MOUSEEVENTF_RIGHTUP,
+        MouseButton::Middle => MOUSEEVENTF_MIDDLEUP,
+    };
+    mouse_interact_with(interaction)
 }
