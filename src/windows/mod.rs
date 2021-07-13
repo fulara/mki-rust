@@ -10,18 +10,18 @@ pub mod hotkey;
 pub mod keyboard;
 pub mod mouse;
 
-struct Listener {
-    keybd_hook_address: *mut HHOOK__,
+pub struct Listener {
+    _keybd_hook_address: *mut HHOOK__,
 
-    handle: JoinHandle<()>,
+    _handle: JoinHandle<()>,
 }
 
 impl Listener {
-    pub fn new(callback: impl Fn() -> bool + Send + Sync) -> Self {
+    pub fn new(_callback: impl Fn() -> bool + Send + Sync) -> Self {
         let keybd_hook_address = install_hook(WH_KEYBOARD_LL, keybd_hook);
         Listener {
-            keybd_hook_address,
-            handle: Self::start_listening_thread(),
+            _keybd_hook_address: keybd_hook_address,
+            _handle: Self::start_listening_thread(),
         }
     }
 
