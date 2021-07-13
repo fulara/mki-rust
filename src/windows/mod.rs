@@ -1,26 +1,68 @@
+use crate::KeybdKey;
+use lazy_static::lazy_static;
+use parking_lot::Mutex;
+use std::collections::HashMap;
+use std::convert::TryInto;
 use std::mem::MaybeUninit;
 use std::ptr::null_mut;
+use std::sync::Arc;
 use std::thread;
 use std::thread::JoinHandle;
 use winapi::shared::minwindef::{HINSTANCE, LPARAM, LRESULT, WPARAM};
 use winapi::shared::windef::HHOOK__;
-use winapi::um::winuser::{CallNextHookEx, GetMessageW, SetWindowsHookExW, MSG, WH_KEYBOARD_LL};
+use winapi::um::winuser::{
+    CallNextHookEx, GetMessageW, SetWindowsHookExW, KBDLLHOOKSTRUCT, MSG, WH_KEYBOARD_LL,
+    WM_KEYDOWN,
+};
 
 pub mod hotkey;
 pub mod keyboard;
 pub mod mouse;
 
-pub struct Listener {
-    _keybd_hook_address: *mut HHOOK__,
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
+pub enum InhibitEvent {
+    Yes,
+    No,
+}
+
+pub fn set_any_key_callback(callback: impl Fn(KeybdKey) -> InhibitEvent + Send + Sync + 'static) {
+    *registry().lock().any_key_callback.lock() = Box::new(callback);
+}
+
+pub fn set_key_callback(
+    key: KeybdKey,
+    callback: impl Fn(KeybdKey) -> InhibitEvent + Send + Sync + 'static,
+) {
+    registry()
+        .lock()
+        .key_callbacks
+        .lock()
+        .insert(key, Box::new(callback));
+}
+
+lazy_static! {
+    static ref REGISTRY: Arc<Mutex<Registry>> = Arc::new(Mutex::new(Registry::new()));
+}
+
+// Just because IDE does not bode well with lazy static.
+fn registry() -> &'static Mutex<Registry> {
+    &REGISTRY
+}
+
+struct Registry {
+    key_callbacks:
+        Arc<Mutex<HashMap<KeybdKey, Box<dyn Fn(KeybdKey) -> InhibitEvent + Send + Sync>>>>,
+    any_key_callback: Arc<Mutex<Box<dyn Fn(KeybdKey) -> InhibitEvent + Send + Sync>>>,
 
     _handle: JoinHandle<()>,
 }
 
-impl Listener {
-    pub fn new(_callback: impl Fn() -> bool + Send + Sync) -> Self {
-        let keybd_hook_address = install_hook(WH_KEYBOARD_LL, keybd_hook);
-        Listener {
-            _keybd_hook_address: keybd_hook_address,
+impl Registry {
+    fn new() -> Self {
+        install_hook(WH_KEYBOARD_LL, keybd_hook);
+        Registry {
+            key_callbacks: Arc::new(Mutex::new(HashMap::new())),
+            any_key_callback: Arc::new(Mutex::new(Box::new(|_| InhibitEvent::No))),
             _handle: Self::start_listening_thread(),
         }
     }
@@ -49,5 +91,24 @@ unsafe extern "system" fn keybd_hook(
     w_param: WPARAM,
     l_param: LPARAM,
 ) -> LRESULT {
-    CallNextHookEx(null_mut(), code, w_param, l_param)
+    let mut inhibit = InhibitEvent::No;
+    if w_param as u32 == WM_KEYDOWN {
+        let vk: u16 = (*(l_param as *const KBDLLHOOKSTRUCT))
+            .vkCode
+            .try_into()
+            .expect("vkCode does not fit in u16");
+        let key: KeybdKey = vk.into();
+        let listener = registry().lock();
+        inhibit = listener.any_key_callback.lock()(key);
+        let key_callbacks = listener.key_callbacks.lock();
+        if let Some(callback) = key_callbacks.get(&key) {
+            inhibit = callback(key)
+        }
+    }
+
+    if inhibit == InhibitEvent::Yes {
+        1
+    } else {
+        CallNextHookEx(null_mut(), code, w_param, l_param)
+    }
 }
