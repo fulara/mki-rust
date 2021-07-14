@@ -19,6 +19,15 @@ pub trait Button {
     fn is_pressed(&self) -> bool;
 }
 
+pub trait Key {
+    fn press(&self);
+    fn release(&self);
+
+    fn is_pressed(&self) -> bool;
+    // Some buttons are toggleable like caps lock.
+    fn is_toggled(&self) -> bool;
+}
+
 #[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
 pub enum KeybdKey {
     Backspace,
