@@ -11,12 +11,12 @@ pub enum MouseButton {
 }
 
 pub trait Button {
-    fn down(&self);
+    fn press(&self);
     // Sends a down + release event
     fn click(&self);
     fn release(&self);
 
-    fn is_down(&self) -> bool;
+    fn is_pressed(&self) -> bool;
 }
 
 #[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
