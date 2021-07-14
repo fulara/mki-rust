@@ -10,6 +10,13 @@ pub enum MouseButton {
     Middle,
 }
 
+pub trait Button {
+    fn down(&self);
+    // Sends a down + release event
+    fn click(&self);
+    fn release(&self);
+}
+
 #[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
 pub enum KeybdKey {
     Backspace,
