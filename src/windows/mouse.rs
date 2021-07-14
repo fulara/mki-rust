@@ -1,11 +1,25 @@
 use std::mem::{size_of, transmute_copy};
 
-use crate::MouseButton;
+use crate::{Button, MouseButton};
 use winapi::um::winuser::{
     GetKeyState, SendInput, INPUT, INPUT_MOUSE, LPINPUT, MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP,
     MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP,
     MOUSEINPUT, VK_LBUTTON, VK_MBUTTON, VK_RBUTTON,
 };
+
+impl Button for MouseButton {
+    fn down(&self) {
+        mouse_down(*self)
+    }
+
+    fn click(&self) {
+        mouse_click(*self);
+    }
+
+    fn release(&self) {
+        mouse_up(*self);
+    }
+}
 
 fn mouse_interact_with(interaction: u32) {
     unsafe {
