@@ -2,9 +2,9 @@ use std::mem::{size_of, transmute_copy};
 
 use crate::{Button, MouseButton};
 use winapi::um::winuser::{
-    GetKeyState, SendInput, INPUT, INPUT_MOUSE, LPINPUT, MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP,
-    MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP,
-    MOUSEINPUT, VK_LBUTTON, VK_MBUTTON, VK_RBUTTON,
+    GetAsyncKeyState, SendInput, INPUT, INPUT_MOUSE, LPINPUT, MOUSEEVENTF_LEFTDOWN,
+    MOUSEEVENTF_LEFTUP, MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_RIGHTDOWN,
+    MOUSEEVENTF_RIGHTUP, MOUSEINPUT, VK_LBUTTON, VK_MBUTTON, VK_RBUTTON,
 };
 
 impl Button for MouseButton {
@@ -76,5 +76,6 @@ pub fn mouse_is_down(button: MouseButton) -> bool {
         MouseButton::Right => VK_RBUTTON,
         MouseButton::Middle => VK_MBUTTON,
     };
-    unsafe { i32::from(GetKeyState(vk)) & 0x8000 != 0 }
+    let state = unsafe { GetAsyncKeyState(vk) };
+    i32::from(state) & 0x8000 != 0
 }
