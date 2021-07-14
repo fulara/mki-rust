@@ -8,8 +8,8 @@ use winapi::um::winuser::{
 };
 
 impl Button for MouseButton {
-    fn down(&self) {
-        mouse_down(*self)
+    fn press(&self) {
+        mouse_press(*self)
     }
 
     fn click(&self) {
@@ -20,7 +20,7 @@ impl Button for MouseButton {
         mouse_release(*self);
     }
 
-    fn is_down(&self) -> bool {
+    fn is_pressed(&self) -> bool {
         mouse_is_down(*self)
     }
 }
@@ -43,7 +43,7 @@ fn mouse_interact_with(interaction: u32) {
     }
 }
 
-pub fn mouse_down(button: MouseButton) {
+pub fn mouse_press(button: MouseButton) {
     let interaction = match button {
         MouseButton::Left => MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP,
         MouseButton::Right => MOUSEEVENTF_RIGHTDOWN | MOUSEEVENTF_RIGHTUP,
