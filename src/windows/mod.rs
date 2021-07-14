@@ -25,11 +25,17 @@ pub enum InhibitEvent {
     No,
 }
 
-pub fn set_any_key_callback(callback: impl Fn(KeybdKey) -> InhibitEvent + Send + Sync + 'static) {
+pub fn install_any_key_callback(
+    callback: impl Fn(KeybdKey) -> InhibitEvent + Send + Sync + 'static,
+) {
     *registry().lock().any_key_callback.lock() = Box::new(callback);
 }
 
-pub fn set_key_callback(
+pub fn remove_any_key_callback() {
+    *registry().lock().any_key_callback.lock() = Box::new(|_| InhibitEvent::No);
+}
+
+pub fn install_key_callback(
     key: KeybdKey,
     callback: impl Fn(KeybdKey) -> InhibitEvent + Send + Sync + 'static,
 ) {
@@ -38,6 +44,10 @@ pub fn set_key_callback(
         .key_callbacks
         .lock()
         .insert(key, Box::new(callback));
+}
+
+pub fn remove_key_callback(key: KeybdKey) {
+    registry().lock().key_callbacks.lock().remove(&key);
 }
 
 lazy_static! {
