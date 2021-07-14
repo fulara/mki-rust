@@ -1,11 +1,33 @@
-use crate::KeybdKey;
+use crate::{Key, KeybdKey};
 use std::convert::TryInto;
 use std::mem::{size_of, transmute_copy};
 use winapi::shared::minwindef::WORD;
 use winapi::um::winuser::{
-    MapVirtualKeyW, SendInput, INPUT, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP,
-    KEYEVENTF_SCANCODE, LPINPUT,
+    GetAsyncKeyState, GetKeyState, MapVirtualKeyW, SendInput, INPUT, INPUT_KEYBOARD, KEYBDINPUT,
+    KEYEVENTF_KEYUP, KEYEVENTF_SCANCODE, LPINPUT,
 };
+
+impl Key for KeybdKey {
+    fn press(&self) {
+        send_key_stroke(true, *self)
+    }
+
+    fn release(&self) {
+        send_key_stroke(false, *self)
+    }
+
+    fn is_pressed(&self) -> bool {
+        let state = unsafe { GetAsyncKeyState(vk_code(*self).into()) };
+        i32::from(state) & 0x8000 != 0
+    }
+
+    fn is_toggled(&self) -> bool {
+        // GetAsync is universal, but does not provide whether button is toggled.
+        // as the GetKeyState seems to guarantee the correctness.
+        let state = unsafe { GetKeyState(vk_code(*self).into()) };
+        i32::from(state) & 0x8001 != 0
+    }
+}
 
 pub fn send_key_stroke(press: bool, key: KeybdKey) {
     let action = if press {
