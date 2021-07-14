@@ -17,7 +17,7 @@ impl Button for MouseButton {
     }
 
     fn release(&self) {
-        mouse_up(*self);
+        mouse_release(*self);
     }
 }
 
@@ -48,7 +48,7 @@ pub fn mouse_down(button: MouseButton) {
     mouse_interact_with(interaction)
 }
 
-pub fn mouse_up(button: MouseButton) {
+pub fn mouse_release(button: MouseButton) {
     let interaction = match button {
         MouseButton::Left => MOUSEEVENTF_LEFTUP,
         MouseButton::Right => MOUSEEVENTF_RIGHTUP,
