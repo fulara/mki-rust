@@ -19,6 +19,10 @@ impl Button for MouseButton {
     fn release(&self) {
         mouse_release(*self);
     }
+
+    fn is_down(&self) -> bool {
+        mouse_is_down(*self)
+    }
 }
 
 fn mouse_interact_with(interaction: u32) {
