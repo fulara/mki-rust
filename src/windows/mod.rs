@@ -92,11 +92,23 @@ unsafe extern "system" fn keybd_hook(
     l_param: LPARAM,
 ) -> LRESULT {
     let mut inhibit = InhibitEvent::No;
+    // Note this seemingly is only activated when ALT is not pressed, need to handle WM_SYSKEYDOWN then
+    // Test that case.
     if w_param as u32 == WM_KEYDOWN {
         let vk: u16 = (*(l_param as *const KBDLLHOOKSTRUCT))
             .vkCode
             .try_into()
             .expect("vkCode does not fit in u16");
+        // https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-keydown
+        // Says that we can find the repeat bit here, however that does not apply to lowlvlkb hook which this is.
+        // Because IDE is not capable of following to the definition here it is:
+        // STRUCT!{struct KBDLLHOOKSTRUCT {
+        //     vkCode: DWORD,
+        //     scanCode: DWORD,
+        //     flags: DWORD,
+        //     time: DWORD,
+        //     dwExtraInfo: ULONG_PTR,
+        // }}
         let key: KeybdKey = vk.into();
         let listener = registry().lock();
         inhibit = listener.any_key_callback.lock()(key);
