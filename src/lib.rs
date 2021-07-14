@@ -15,6 +15,8 @@ pub trait Button {
     // Sends a down + release event
     fn click(&self);
     fn release(&self);
+
+    fn is_down(&self) -> bool;
 }
 
 #[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
