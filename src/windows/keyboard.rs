@@ -1,16 +1,27 @@
 use crate::KeybdKey;
+use std::convert::TryInto;
 use std::mem::{size_of, transmute_copy};
 use winapi::shared::minwindef::WORD;
-use winapi::um::winuser::{SendInput, INPUT, INPUT_KEYBOARD, KEYBDINPUT, LPINPUT};
+use winapi::um::winuser::{
+    MapVirtualKeyW, SendInput, INPUT, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP,
+    KEYEVENTF_SCANCODE, LPINPUT,
+};
 
-pub fn send_key_stroke(p: KeybdKey) {
+pub fn send_key_stroke(press: bool, key: KeybdKey) {
+    let action = if press {
+        0 // 0 means to press.
+    } else {
+        KEYEVENTF_KEYUP
+    };
     unsafe {
         let mut x = INPUT {
             type_: INPUT_KEYBOARD,
             u: transmute_copy(&KEYBDINPUT {
-                wVk: vk_code(p) as WORD, // 'a' key
-                wScan: 0,                // 0 := hardware scan code for a key
-                dwFlags: 0,              // 0 := a key press
+                wVk: 0,
+                wScan: MapVirtualKeyW(vk_code(key).into(), 0)
+                    .try_into()
+                    .expect("Failed to map vk to scan code"), // This ignores the keyboard layout so better than vk?
+                dwFlags: KEYEVENTF_SCANCODE | action,
                 time: 0,
                 dwExtraInfo: 0,
             }),
