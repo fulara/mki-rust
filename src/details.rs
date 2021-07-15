@@ -16,8 +16,8 @@ pub(crate) fn registry() -> &'static Mutex<Registry> {
 
 pub(crate) struct Registry {
     pub(crate) key_callbacks:
-        Arc<Mutex<HashMap<KeybdKey, Box<dyn Fn(KeybdKey) -> InhibitEvent + Send + Sync>>>>,
-    pub(crate) any_key_callback: Arc<Mutex<Box<dyn Fn(KeybdKey) -> InhibitEvent + Send + Sync>>>,
+        HashMap<KeybdKey, Box<dyn Fn(KeybdKey) -> InhibitEvent + Send + Sync>>,
+    pub(crate) any_key_callback: Box<dyn Fn(KeybdKey) -> InhibitEvent + Send + Sync>,
 
     _handle: JoinHandle<()>,
 }
@@ -26,8 +26,8 @@ impl Registry {
     pub(crate) fn new() -> Self {
         install_hooks();
         Registry {
-            key_callbacks: Arc::new(Mutex::new(HashMap::new())),
-            any_key_callback: Arc::new(Mutex::new(Box::new(|_| InhibitEvent::No))),
+            key_callbacks: HashMap::new(),
+            any_key_callback: Box::new(|_| InhibitEvent::No),
             _handle: start_listening_thread(),
         }
     }
