@@ -1,5 +1,9 @@
 #[cfg(target_os = "windows")]
 mod windows;
+
+pub(crate) mod details;
+
+use crate::details::registry;
 #[cfg(target_os = "windows")]
 pub use windows::*;
 
@@ -10,6 +14,7 @@ pub enum MouseButton {
     Middle,
 }
 
+// MouseButton implements.
 pub trait Button {
     fn press(&self);
     // Sends a down + release event
@@ -19,6 +24,7 @@ pub trait Button {
     fn is_pressed(&self) -> bool;
 }
 
+// KeybdKey implements.
 pub trait Key {
     fn press(&self);
     fn release(&self);
@@ -120,4 +126,35 @@ pub enum KeybdKey {
     LControl,
     RControl,
     Other(u16),
+}
+
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
+pub enum InhibitEvent {
+    Yes,
+    No,
+}
+
+pub fn install_any_key_callback(
+    callback: impl Fn(KeybdKey) -> InhibitEvent + Send + Sync + 'static,
+) {
+    *registry().lock().any_key_callback.lock() = Box::new(callback);
+}
+
+pub fn remove_any_key_callback() {
+    *registry().lock().any_key_callback.lock() = Box::new(|_| InhibitEvent::No);
+}
+
+pub fn install_key_callback(
+    key: KeybdKey,
+    callback: impl Fn(KeybdKey) -> InhibitEvent + Send + Sync + 'static,
+) {
+    registry()
+        .lock()
+        .key_callbacks
+        .lock()
+        .insert(key, Box::new(callback));
+}
+
+pub fn remove_key_callback(key: KeybdKey) {
+    registry().lock().key_callbacks.lock().remove(&key);
 }
