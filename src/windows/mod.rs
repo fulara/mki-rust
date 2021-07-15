@@ -62,9 +62,9 @@ unsafe extern "system" fn keybd_hook(
         //     dwExtraInfo: ULONG_PTR,
         // }}
         let key: KeybdKey = vk.into();
-        let listener = registry().lock();
-        inhibit = listener.any_key_callback.lock()(key);
-        let key_callbacks = listener.key_callbacks.lock();
+        let listener = registry().lock().unwrap();
+        inhibit = listener.any_key_callback.lock().unwrap()(key);
+        let key_callbacks = listener.key_callbacks.lock().unwrap();
         if let Some(callback) = key_callbacks.get(&key) {
             inhibit = callback(key)
         }
