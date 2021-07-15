@@ -1,7 +1,56 @@
 use crate::KeybdKey;
+use std::sync::{Arc, Mutex, MutexGuard};
+use uinput::event::keyboard::Key;
+use uinput::event::relative::Position;
+use uinput::event::Code;
+
+fn device() -> MutexGuard<'static, uinput::Device> {
+    lazy_static::lazy_static! {
+        static ref DEVICE: Arc<Mutex<uinput::Device>> = Arc::new(Mutex::new(
+            uinput::default()
+            .unwrap()
+            .name("mki")
+            .unwrap()
+            .event(uinput::event::Keyboard::All)
+            .unwrap()
+            .event(Position::X)
+            .unwrap()
+            .event(Position::Y)
+            .unwrap()
+            .create()
+            .unwrap(),
+        ));
+    }
+    DEVICE.lock().unwrap()
+}
+pub fn send_key_stroke(press: bool, key: KeybdKey) {
+    // let action = if press {
+    //     0 // 0 means to press.
+    // } else {
+    //     KEYEVENTF_KEYUP
+    // };
+    // unsafe {
+    //     let mut x = INPUT {
+    //         type_: INPUT_KEYBOARD,
+    //         u: transmute_copy(&KEYBDINPUT {
+    //             wVk: 0,
+    //             wScan: MapVirtualKeyW(vk_code(key).into(), 0)
+    //                 .try_into()
+    //                 .expect("Failed to map vk to scan code"), // This ignores the keyboard layout so better than vk?
+    //             dwFlags: KEYEVENTF_SCANCODE | action,
+    //             time: 0,
+    //             dwExtraInfo: 0,
+    //         }),
+    //     };
+    //
+    //     SendInput(1, &mut x as LPINPUT, size_of::<INPUT>() as libc::c_int);
+    // }
+}
 
 impl From<KeybdKey> for u16 {
     fn from(key: KeybdKey) -> u16 {
+        // Key::BackSpace.code()
+
         use KeybdKey::*;
         match key {
             Backspace => 0xFF08,
