@@ -47,8 +47,8 @@ pub fn send_key_stroke(press: bool, key: KeybdKey) {
     // }
 }
 
-impl From<KeybdKey> for u16 {
-    fn from(key: KeybdKey) -> u16 {
+impl From<KeybdKey> for i32 {
+    fn from(key: KeybdKey) -> i32 {
         // Key::BackSpace.code()
 
         use KeybdKey::*;
