@@ -3,7 +3,7 @@ mod windows;
 
 pub(crate) mod details;
 
-use crate::details::registry;
+use crate::details::lock_registry;
 #[cfg(target_os = "windows")]
 pub use windows::*;
 
@@ -137,24 +137,22 @@ pub enum InhibitEvent {
 pub fn install_any_key_callback(
     callback: impl Fn(KeybdKey) -> InhibitEvent + Send + Sync + 'static,
 ) {
-    registry().lock().unwrap().any_key_callback = Box::new(callback);
+    lock_registry().any_key_callback = Box::new(callback);
 }
 
 pub fn remove_any_key_callback() {
-    registry().lock().unwrap().any_key_callback = Box::new(|_| InhibitEvent::No);
+    lock_registry().any_key_callback = Box::new(|_| InhibitEvent::No);
 }
 
 pub fn install_key_callback(
     key: KeybdKey,
     callback: impl Fn(KeybdKey) -> InhibitEvent + Send + Sync + 'static,
 ) {
-    registry()
-        .lock()
-        .unwrap()
+    lock_registry()
         .key_callbacks
         .insert(key, Box::new(callback));
 }
 
 pub fn remove_key_callback(key: KeybdKey) {
-    registry().lock().unwrap().key_callbacks.remove(&key);
+    lock_registry().key_callbacks.remove(&key);
 }
