@@ -56,7 +56,7 @@ pub fn send_key_stroke(press: bool, key: KeybdKey) {
 fn vk_code(key: KeybdKey) -> WORD {
     use KeybdKey::*;
 
-    let vk: u16 = match key {
+    let vk: i32 = match key {
         Backspace => 0x08,
         Tab => 0x09,
         Enter => 0x0D,
@@ -148,11 +148,11 @@ fn vk_code(key: KeybdKey) -> WORD {
         RControl => 0xA3,
         Other(code) => code,
     };
-    vk.into()
+    vk.try_into().expect("vk does not fit into WORD")
 }
 
-impl From<u16> for KeybdKey {
-    fn from(code: u16) -> Self {
+impl From<i32> for KeybdKey {
+    fn from(code: i32) -> Self {
         use KeybdKey::*;
         match code {
             0x08 => Backspace,

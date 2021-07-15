@@ -129,7 +129,7 @@ pub enum KeybdKey {
     RShift,
     LControl,
     RControl,
-    Other(u16),
+    Other(i32),
 }
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
