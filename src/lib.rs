@@ -137,11 +137,11 @@ pub enum InhibitEvent {
 pub fn install_any_key_callback(
     callback: impl Fn(KeybdKey) -> InhibitEvent + Send + Sync + 'static,
 ) {
-    *registry().lock().any_key_callback.lock() = Box::new(callback);
+    *registry().lock().unwrap().any_key_callback.lock().unwrap() = Box::new(callback);
 }
 
 pub fn remove_any_key_callback() {
-    *registry().lock().any_key_callback.lock() = Box::new(|_| InhibitEvent::No);
+    *registry().lock().unwrap().any_key_callback.lock().unwrap() = Box::new(|_| InhibitEvent::No);
 }
 
 pub fn install_key_callback(
@@ -150,11 +150,19 @@ pub fn install_key_callback(
 ) {
     registry()
         .lock()
+        .unwrap()
         .key_callbacks
         .lock()
+        .unwrap()
         .insert(key, Box::new(callback));
 }
 
 pub fn remove_key_callback(key: KeybdKey) {
-    registry().lock().key_callbacks.lock().remove(&key);
+    registry()
+        .lock()
+        .unwrap()
+        .key_callbacks
+        .lock()
+        .unwrap()
+        .remove(&key);
 }

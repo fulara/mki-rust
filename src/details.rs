@@ -1,9 +1,8 @@
 use crate::install_hooks;
 use crate::start_listening_thread;
 use crate::{InhibitEvent, KeybdKey};
-use parking_lot::Mutex;
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 
 lazy_static::lazy_static! {
