@@ -5,11 +5,12 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::thread::JoinHandle;
 
-lazy_static::lazy_static! {
-    pub(crate) static ref REGISTRY: Arc<Mutex<Registry>> = Arc::new(Mutex::new(Registry::new()));
-}
+
 
 pub(crate) fn lock_registry() -> MutexGuard<'static, Registry> {
+    lazy_static::lazy_static! {
+        static ref REGISTRY: Arc<Mutex<Registry>> = Arc::new(Mutex::new(Registry::new()));
+    }
     REGISTRY.lock().unwrap()
 }
 
