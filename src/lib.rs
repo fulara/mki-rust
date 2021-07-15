@@ -1,9 +1,9 @@
+pub(crate) mod details;
+
 #[cfg(target_os = "linux")]
 mod linux;
 #[cfg(target_os = "windows")]
 mod windows;
-
-pub(crate) mod details;
 
 use crate::details::lock_registry;
 #[cfg(target_os = "linux")]
