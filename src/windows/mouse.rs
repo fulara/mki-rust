@@ -1,6 +1,5 @@
-use std::mem::{size_of, transmute_copy};
-
 use crate::{Button, MouseButton};
+use std::mem::{size_of, transmute_copy};
 use winapi::um::winuser::{
     GetAsyncKeyState, SendInput, INPUT, INPUT_MOUSE, LPINPUT, MOUSEEVENTF_LEFTDOWN,
     MOUSEEVENTF_LEFTUP, MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_RIGHTDOWN,

@@ -1,3 +1,7 @@
+// pub mod hotkey;
+pub mod keyboard;
+pub mod mouse;
+
 use crate::details::lock_registry;
 use crate::{InhibitEvent, KeybdKey};
 use std::convert::TryInto;
@@ -9,10 +13,6 @@ use winapi::um::winuser::{
     CallNextHookEx, GetMessageW, SetWindowsHookExW, KBDLLHOOKSTRUCT, MSG, WH_KEYBOARD_LL,
     WM_KEYDOWN,
 };
-
-// pub mod hotkey;
-pub mod keyboard;
-pub mod mouse;
 
 pub(crate) fn install_hooks() {
     install_hook(WH_KEYBOARD_LL, keybd_hook);

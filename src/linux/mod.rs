@@ -1,7 +1,7 @@
+pub mod keyboard;
+
 use std::thread;
 use std::thread::JoinHandle;
-
-pub mod keyboard;
 
 pub(crate) fn install_hooks() {}
 
