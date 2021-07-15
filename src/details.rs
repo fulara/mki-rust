@@ -2,16 +2,15 @@ use crate::install_hooks;
 use crate::start_listening_thread;
 use crate::{InhibitEvent, KeybdKey};
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, MutexGuard};
 use std::thread::JoinHandle;
 
 lazy_static::lazy_static! {
     pub(crate) static ref REGISTRY: Arc<Mutex<Registry>> = Arc::new(Mutex::new(Registry::new()));
 }
 
-// Just because IDE does not bode well with lazy static.
-pub(crate) fn registry() -> &'static Mutex<Registry> {
-    &REGISTRY
+pub(crate) fn lock_registry() -> MutexGuard<'static, Registry> {
+    REGISTRY.lock().unwrap()
 }
 
 pub(crate) struct Registry {

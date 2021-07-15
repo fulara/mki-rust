@@ -1,4 +1,4 @@
-use crate::details::registry;
+use crate::details::lock_registry;
 use crate::{InhibitEvent, KeybdKey};
 use std::convert::TryInto;
 use std::mem::MaybeUninit;
@@ -62,9 +62,9 @@ unsafe extern "system" fn keybd_hook(
         //     dwExtraInfo: ULONG_PTR,
         // }}
         let key: KeybdKey = vk.into();
-        let listener = registry().lock().unwrap();
-        inhibit = (listener.any_key_callback)(key);
-        if let Some(callback) = listener.key_callbacks.get(&key) {
+        let registry = lock_registry();
+        inhibit = (registry.any_key_callback)(key);
+        if let Some(callback) = registry.key_callbacks.get(&key) {
             inhibit = callback(key)
         }
     }
