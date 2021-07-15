@@ -63,9 +63,8 @@ unsafe extern "system" fn keybd_hook(
         // }}
         let key: KeybdKey = vk.into();
         let listener = registry().lock().unwrap();
-        inhibit = listener.any_key_callback.lock().unwrap()(key);
-        let key_callbacks = listener.key_callbacks.lock().unwrap();
-        if let Some(callback) = key_callbacks.get(&key) {
+        inhibit = (listener.any_key_callback)(key);
+        if let Some(callback) = listener.key_callbacks.get(&key) {
             inhibit = callback(key)
         }
     }
