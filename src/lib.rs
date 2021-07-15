@@ -32,6 +32,7 @@ pub trait Button {
 pub trait Key {
     fn press(&self);
     fn release(&self);
+    fn click(&self);
 
     fn is_pressed(&self) -> bool;
     // Some buttons are toggleable like caps lock.

@@ -1,6 +1,12 @@
 # Linux
 
-sudo apt-get install libxtst-dev
+### Linux dependencies:
+*libxtst-dev*
+
+### Linux caveats
+
+Currently the linux implementation will sleep for 100ms upon first invocation of the library.
+Otherwise some initial key strokes are missed.
 
 ##### cross development linux -> windows
 cross rulez.

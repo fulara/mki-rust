@@ -16,6 +16,12 @@ impl Key for KeybdKey {
         send_key_stroke(false, *self)
     }
 
+    fn click(&self) {
+        // Do we need sleep in between?
+        self.press();
+        self.release();
+    }
+
     fn is_pressed(&self) -> bool {
         let state = unsafe { GetAsyncKeyState(vk_code(*self).into()) };
         i32::from(state) & 0x8000 != 0
