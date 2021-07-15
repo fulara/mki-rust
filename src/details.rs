@@ -1,8 +1,8 @@
-use crate::install_hooks;
-use crate::start_listening_thread;
+use crate::{install_hooks, process_message};
 use crate::{InhibitEvent, KeybdKey};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, MutexGuard};
+use std::thread;
 use std::thread::JoinHandle;
 
 pub(crate) fn lock_registry() -> MutexGuard<'static, Registry> {
@@ -22,11 +22,17 @@ pub(crate) struct Registry {
 
 impl Registry {
     pub(crate) fn new() -> Self {
-        install_hooks();
         Registry {
             key_callbacks: HashMap::new(),
             any_key_callback: Box::new(|_| InhibitEvent::No),
-            _handle: start_listening_thread(),
+            _handle: thread::Builder::new()
+                .name("mki-lstn".into())
+                .spawn(|| {
+                    // For windows hooks need to be installed on the same thread that listens to the Messages.
+                    install_hooks();
+                    process_message();
+                })
+                .unwrap(),
         }
     }
 }
