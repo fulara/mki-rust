@@ -8,6 +8,7 @@ pub(crate) mod details;
 use crate::details::lock_registry;
 #[cfg(target_os = "linux")]
 pub use linux::*;
+use std::thread;
 #[cfg(target_os = "windows")]
 pub use windows::*;
 
@@ -139,16 +140,29 @@ pub enum InhibitEvent {
     No,
 }
 
+/// Installs a callback that gets invoked whenever any key is pressed on the keyboard.
+/// It is discouraged to send any inputs from within those callbacks as that messes
+/// thread message queue. use the 'handler' version to send input from that callback.
 pub fn install_any_key_callback(
     callback: impl Fn(KeybdKey) -> InhibitEvent + Send + Sync + 'static,
 ) {
     lock_registry().any_key_callback = Box::new(callback);
 }
 
+/// Installs a handler that gets invoked from a new thread whenever any key is pressed.
+pub fn install_any_key_handler(callback: impl Fn(KeybdKey) + Clone + Send + Sync + 'static) {
+    lock_registry().any_key_callback = Box::new(move |key| {
+        let callback = callback.clone();
+        thread::spawn(move || callback(key));
+        InhibitEvent::No
+    });
+}
+
 pub fn remove_any_key_callback() {
     lock_registry().any_key_callback = Box::new(|_| InhibitEvent::No);
 }
 
+/// a version of `install_any_key_callback` but that gets activated only on given key.
 pub fn install_key_callback(
     key: KeybdKey,
     callback: impl Fn(KeybdKey) -> InhibitEvent + Send + Sync + 'static,
@@ -156,6 +170,19 @@ pub fn install_key_callback(
     lock_registry()
         .key_callbacks
         .insert(key, Box::new(callback));
+}
+
+/// a version of `install_any_key_handler` but that gets activated only on given key.
+pub fn install_key_handler(
+    key: KeybdKey,
+    callback: impl Fn(KeybdKey) + Clone + Send + Sync + 'static,
+) {
+    let handler = Box::new(move |key| {
+        let callback = callback.clone();
+        thread::spawn(move || callback(key));
+        InhibitEvent::No
+    });
+    lock_registry().key_callbacks.insert(key, handler);
 }
 
 pub fn remove_key_callback(key: KeybdKey) {
