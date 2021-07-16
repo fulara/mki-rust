@@ -11,3 +11,7 @@ pub(crate) fn start_listening_thread() -> JoinHandle<()> {
         .spawn(|| loop {})
         .unwrap()
 }
+
+pub(crate) fn process_message() {
+    ::std::thread::sleep_ms(1000); // todo.
+}

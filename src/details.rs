@@ -1,7 +1,7 @@
 use crate::{install_hooks, process_message};
 use crate::{InhibitEvent, KeybdKey};
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex, MutexGuard};
+use std::sync::{mpsc, Arc, Mutex, MutexGuard};
 use std::thread;
 use std::thread::JoinHandle;
 
@@ -12,12 +12,19 @@ pub(crate) fn lock_registry() -> MutexGuard<'static, Registry> {
     REGISTRY.lock().unwrap()
 }
 
+struct Sequencer {
+    _handle: JoinHandle<()>,
+
+    tx: mpsc::Sender<Box<dyn Fn() + Send + Sync>>,
+}
+
 pub(crate) struct Registry {
     pub(crate) key_callbacks:
         HashMap<KeybdKey, Box<dyn Fn(KeybdKey) -> InhibitEvent + Send + Sync>>,
     pub(crate) any_key_callback: Box<dyn Fn(KeybdKey) -> InhibitEvent + Send + Sync>,
 
     _handle: JoinHandle<()>,
+    sequencer: Option<Sequencer>,
 }
 
 impl Registry {
@@ -33,6 +40,33 @@ impl Registry {
                     process_message();
                 })
                 .unwrap(),
+            sequencer: None,
         }
+    }
+
+    pub(crate) fn sequence(
+        &mut self,
+        key: KeybdKey,
+        action: impl Fn(KeybdKey) + Clone + Send + Sync + 'static,
+    ) {
+        let erased_action = Box::new(move || {
+            action(key);
+        });
+        let sequencer = self.sequencer.get_or_insert({
+            let (tx, rx) = mpsc::channel::<Box<dyn Fn() + Send + Sync>>();
+            thread::Builder::new();
+            Sequencer {
+                _handle: thread::Builder::new()
+                    .name("sequencer".into())
+                    .spawn(move || {
+                        while let Ok(action) = rx.recv() {
+                            action()
+                        }
+                    })
+                    .unwrap(),
+                tx,
+            }
+        });
+        let _ = sequencer.tx.send(erased_action);
     }
 }
