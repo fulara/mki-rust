@@ -3,6 +3,7 @@ use std::sync::{Arc, Mutex, MutexGuard};
 use std::time::Duration;
 use uinput::event::keyboard::Key;
 use uinput::event::relative::Position;
+use uinput::event::Code;
 
 enum KeybdAction {
     Press,
@@ -68,6 +69,8 @@ fn device() -> MutexGuard<'static, uinput::Device> {
     }
     DEVICE.lock().unwrap()
 }
+
+fn is_pressed() {}
 
 pub fn key_to_event(key: KeybdKey) -> Option<Key> {
     use KeybdKey::*;
@@ -162,5 +165,101 @@ pub fn key_to_event(key: KeybdKey) -> Option<Key> {
         F24 => Some(Key::F24),
         RControl => Some(Key::RightControl),
         Other(_code) => None,
+    }
+}
+
+pub(crate) fn code_to_key(code: u32) -> KeybdKey {
+    use KeybdKey::*;
+    match code as i32 {
+        code if Key::BackSpace.code() == code => Backspace,
+        code if Key::Tab.code() == code => Tab,
+        code if Key::Enter.code() == code => Enter,
+        code if Key::Esc.code() == code => Escape,
+        code if Key::Space.code() == code => Space,
+        code if Key::Home.code() == code => Home,
+        code if Key::Left.code() == code => Left,
+        code if Key::Up.code() == code => Up,
+        code if Key::Right.code() == code => Right,
+        code if Key::Down.code() == code => Down,
+        code if Key::Insert.code() == code => Insert,
+        code if Key::Delete.code() == code => Delete,
+        code if Key::_0.code() == code => Numrow0,
+        code if Key::_1.code() == code => Numrow1,
+        code if Key::_2.code() == code => Numrow2,
+        code if Key::_3.code() == code => Numrow3,
+        code if Key::_4.code() == code => Numrow4,
+        code if Key::_5.code() == code => Numrow5,
+        code if Key::_6.code() == code => Numrow6,
+        code if Key::_7.code() == code => Numrow7,
+        code if Key::_8.code() == code => Numrow8,
+        code if Key::_9.code() == code => Numrow9,
+        code if Key::A.code() == code => A,
+        code if Key::B.code() == code => B,
+        code if Key::C.code() == code => C,
+        code if Key::D.code() == code => D,
+        code if Key::E.code() == code => E,
+        code if Key::F.code() == code => F,
+        code if Key::G.code() == code => G,
+        code if Key::H.code() == code => H,
+        code if Key::I.code() == code => I,
+        code if Key::J.code() == code => J,
+        code if Key::K.code() == code => K,
+        code if Key::L.code() == code => L,
+        code if Key::M.code() == code => M,
+        code if Key::N.code() == code => N,
+        code if Key::O.code() == code => O,
+        code if Key::P.code() == code => P,
+        code if Key::Q.code() == code => Q,
+        code if Key::R.code() == code => R,
+        code if Key::S.code() == code => S,
+        code if Key::T.code() == code => T,
+        code if Key::U.code() == code => U,
+        code if Key::V.code() == code => V,
+        code if Key::W.code() == code => W,
+        code if Key::X.code() == code => X,
+        code if Key::Y.code() == code => Y,
+        code if Key::Z.code() == code => Z,
+        code if Key::_0.code() == code => Numpad0,
+        code if Key::_1.code() == code => Numpad1,
+        code if Key::_2.code() == code => Numpad2,
+        code if Key::_3.code() == code => Numpad3,
+        code if Key::_4.code() == code => Numpad4,
+        code if Key::_5.code() == code => Numpad5,
+        code if Key::_6.code() == code => Numpad6,
+        code if Key::_7.code() == code => Numpad7,
+        code if Key::_8.code() == code => Numpad8,
+        code if Key::_9.code() == code => Numpad9,
+        code if Key::F1.code() == code => F1,
+        code if Key::F2.code() == code => F2,
+        code if Key::F3.code() == code => F3,
+        code if Key::F4.code() == code => F4,
+        code if Key::F5.code() == code => F5,
+        code if Key::F6.code() == code => F6,
+        code if Key::F7.code() == code => F7,
+        code if Key::F8.code() == code => F8,
+        code if Key::F9.code() == code => F9,
+        code if Key::F10.code() == code => F10,
+        code if Key::NumLock.code() == code => NumLock,
+        code if Key::ScrollLock.code() == code => ScrollLock,
+        code if Key::CapsLock.code() == code => CapsLock,
+        code if Key::LeftShift.code() == code => LShift,
+        code if Key::RightShift.code() == code => RShift,
+        code if Key::LeftControl.code() == code => LControl,
+        code if Key::F11.code() == code => F11,
+        code if Key::F12.code() == code => F12,
+        code if Key::F13.code() == code => F13,
+        code if Key::F14.code() == code => F14,
+        code if Key::F15.code() == code => F15,
+        code if Key::F16.code() == code => F16,
+        code if Key::F17.code() == code => F17,
+        code if Key::F18.code() == code => F18,
+        code if Key::F19.code() == code => F19,
+        code if Key::F20.code() == code => F20,
+        code if Key::F21.code() == code => F21,
+        code if Key::F22.code() == code => F22,
+        code if Key::F23.code() == code => F23,
+        code if Key::F24.code() == code => F24,
+        code if Key::RightControl.code() == code => RControl,
+        code => Other(code),
     }
 }
