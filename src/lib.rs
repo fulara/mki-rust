@@ -158,7 +158,14 @@ pub fn install_any_key_handler(callback: impl Fn(KeybdKey) + Clone + Send + Sync
     });
 }
 
-pub fn remove_any_key_callback() {
+pub fn install_any_key_sequencer(callback: impl Fn(KeybdKey) + Clone + Send + Sync + 'static) {
+    lock_registry().any_key_callback = Box::new(move |key| {
+        lock_registry().sequence(key, callback.clone());
+        InhibitEvent::No
+    });
+}
+
+pub fn remove_any_key_bind() {
     lock_registry().any_key_callback = Box::new(|_| InhibitEvent::No);
 }
 
@@ -183,6 +190,19 @@ pub fn install_key_handler(
         InhibitEvent::No
     });
     lock_registry().key_callbacks.insert(key, handler);
+}
+
+pub fn install_key_sequencer(
+    key: KeybdKey,
+    callback: impl Fn(KeybdKey) + Clone + Send + Sync + 'static,
+) {
+    lock_registry().key_callbacks.insert(
+        key,
+        Box::new(move |key| {
+            lock_registry().sequence(key, callback.clone());
+            InhibitEvent::No
+        }),
+    );
 }
 
 pub fn remove_key_callback(key: KeybdKey) {
