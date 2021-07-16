@@ -13,5 +13,5 @@ fn main() {
     for key in [T, H, I, S, Space, A, Space, T, E, S, T].iter() {
         key.click();
     }
-    thread::sleep(Duration::from_secs(1));
+    thread::sleep(Duration::from_secs(100));
 }
