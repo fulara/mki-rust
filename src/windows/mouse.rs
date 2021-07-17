@@ -3,7 +3,7 @@ use std::mem::{size_of, transmute_copy};
 use winapi::um::winuser::{
     GetAsyncKeyState, SendInput, INPUT, INPUT_MOUSE, LPINPUT, MOUSEEVENTF_LEFTDOWN,
     MOUSEEVENTF_LEFTUP, MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_RIGHTDOWN,
-    MOUSEEVENTF_RIGHTUP, MOUSEINPUT, VK_LBUTTON, VK_MBUTTON, VK_RBUTTON,
+    MOUSEEVENTF_RIGHTUP, MOUSEINPUT, VK_LBUTTON, VK_MBUTTON, VK_RBUTTON, VK_XBUTTON1, VK_XBUTTON2,
 };
 
 impl Button for MouseButton {
@@ -47,6 +47,8 @@ pub fn mouse_press(button: MouseButton) {
         MouseButton::Left => MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP,
         MouseButton::Right => MOUSEEVENTF_RIGHTDOWN | MOUSEEVENTF_RIGHTUP,
         MouseButton::Middle => MOUSEEVENTF_MIDDLEDOWN | MOUSEEVENTF_MIDDLEUP,
+        MouseButton::Side => todo!("requires filling of dwflags"),
+        MouseButton::Extra => todo!("requires filling of dwflags"),
     };
     mouse_interact_with(interaction)
 }
@@ -56,6 +58,8 @@ pub fn mouse_release(button: MouseButton) {
         MouseButton::Left => MOUSEEVENTF_LEFTUP,
         MouseButton::Right => MOUSEEVENTF_RIGHTUP,
         MouseButton::Middle => MOUSEEVENTF_MIDDLEUP,
+        MouseButton::Side => todo!("requires filling of dwflags"),
+        MouseButton::Extra => todo!("requires filling of dwflags"),
     };
     mouse_interact_with(interaction)
 }
@@ -65,6 +69,8 @@ pub fn mouse_click(button: MouseButton) {
         MouseButton::Left => MOUSEEVENTF_LEFTUP,
         MouseButton::Right => MOUSEEVENTF_RIGHTUP,
         MouseButton::Middle => MOUSEEVENTF_MIDDLEUP,
+        MouseButton::Side => todo!("requires filling of dwflags"),
+        MouseButton::Extra => todo!("requires filling of dwflags"),
     };
     mouse_interact_with(interaction)
 }
@@ -74,6 +80,8 @@ pub fn mouse_is_down(button: MouseButton) -> bool {
         MouseButton::Left => VK_LBUTTON,
         MouseButton::Right => VK_RBUTTON,
         MouseButton::Middle => VK_MBUTTON,
+        MouseButton::Side => VK_XBUTTON1,
+        MouseButton::Extra => VK_XBUTTON2,
     };
     let state = unsafe { GetAsyncKeyState(vk) };
     i32::from(state) & 0x8000 != 0
