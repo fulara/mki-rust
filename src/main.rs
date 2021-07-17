@@ -4,12 +4,12 @@ use std::time::Duration;
 
 fn main() {
     use KeybdKey::*;
-    install_any_key_handler(|key| {
+    bind_any_key(Action::handle(|key| {
         println!("Pressed: {:?}", key);
         if key == KeybdKey::A {
             println!("And the winner is.");
         }
-    });
+    }));
     for key in [T, H, I, S, Space, A, Space, T, E, S, T].iter() {
         key.click();
     }
