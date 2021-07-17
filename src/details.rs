@@ -65,7 +65,7 @@ pub(crate) struct Registry {
     pub(crate) button_callbacks: Mutex<HashMap<Mouse, Arc<Action>>>,
     pub(crate) any_key_callback: Mutex<Option<Arc<Action>>>,
     pub(crate) any_button_callback: Mutex<Option<Arc<Action>>>,
-    pub(crate) hotkeys: Mutex<HashMap<Vec<Keyboard>, Box<dyn Fn() + Send + Sync + 'static>>>,
+    pub(crate) hotkeys: Mutex<HashMap<Vec<Keyboard>, Arc<Box<dyn Fn() + Send + Sync + 'static>>>>,
 
     pressed: Mutex<Pressed>,
 
@@ -145,14 +145,19 @@ impl Registry {
 
     pub(crate) fn event_down(&self, event: Event) -> InhibitEvent {
         self.pressed.lock().unwrap().pressed(event);
+        let mut callbacks = Vec::new();
         if let Event::Keyboard(key) = event {
             for (sequence, callback) in self.hotkeys.lock().unwrap().iter() {
                 if sequence.last() == Some(&key) {
                     if self.pressed.lock().unwrap().are_pressed(&sequence) {
-                        callback();
+                        callbacks.push(callback.clone());
                     }
                 }
             }
+        }
+        for callback in callbacks {
+            // Should we not invoke actions if there is any hotkey present?
+            callback()
         }
         let state = State::Pressed;
         let mut inhibit = InhibitEvent::No;
@@ -197,12 +202,12 @@ impl Registry {
     pub(crate) fn register_hotkey(
         &self,
         sequence: &[Keyboard],
-        handler: impl Fn() + Clone + Send + Sync + 'static,
+        handler: impl Fn() + Send + Sync + 'static,
     ) {
         self.hotkeys
             .lock()
             .unwrap()
-            .insert(sequence.to_vec(), Box::new(handler));
+            .insert(sequence.to_vec(), Arc::new(Box::new(handler)));
     }
 
     pub(crate) fn unregister_hotkey(&self, sequence: &[Keyboard]) {
