@@ -3,11 +3,15 @@ use std::thread;
 use std::time::Duration;
 
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
+/// A sequence of events to execute.
 pub struct Sequence {
     sequence: Vec<Vec<Keyboard>>,
 }
 
 impl Sequence {
+    /// A Sequence of events to execute parsed from some text.
+    /// Can only be created if all the keys are supported. upon encountering a key that cannot be
+    /// represented will return None.
     pub fn text(text: &str) -> Option<Self> {
         let mut sequence = Vec::new();
         for char in text.chars() {
@@ -54,6 +58,7 @@ impl Sequence {
         return Some(Sequence { sequence });
     }
 
+    /// send this Sequence on new thread.
     pub fn send(&self) {
         let cloned = self.clone();
         thread::spawn(move || {
