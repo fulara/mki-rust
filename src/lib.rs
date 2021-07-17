@@ -54,6 +54,16 @@ impl KeybdKey {
     }
 }
 
+impl MouseButton {
+    pub fn bind(&self, handler: impl Fn(MouseButton) + Clone + Send + Sync + 'static) {
+        bind_button(*self, Action::handle_mouse(handler))
+    }
+
+    pub fn act_on(&self, action: Action) {
+        bind_button(*self, action)
+    }
+}
+
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub enum InhibitEvent {
     Yes,
@@ -98,6 +108,14 @@ impl Action {
         })
     }
 
+    pub fn handle_mouse(action: impl Fn(MouseButton) + Clone + Send + Sync + 'static) -> Self {
+        Self::handle(move |event| {
+            if let Event::Mouse(button) = event {
+                action(button);
+            }
+        })
+    }
+
     pub fn handle(action: impl Fn(Event) + Clone + Send + Sync + 'static) -> Self {
         Action {
             callback: Box::new(move |event, state| {
@@ -119,6 +137,14 @@ impl Action {
         Self::callback(move |event| {
             if let Event::Keyboard(key) = event {
                 action(key);
+            }
+        })
+    }
+
+    pub fn callback_mouse(action: impl Fn(MouseButton) + Clone + Send + Sync + 'static) -> Self {
+        Self::callback(move |event| {
+            if let Event::Mouse(button) = event {
+                action(button);
             }
         })
     }
@@ -145,6 +171,14 @@ impl Action {
         Self::sequencing(move |event| {
             if let Event::Keyboard(key) = event {
                 action(key);
+            }
+        })
+    }
+
+    pub fn sequencing_mouse(action: impl Fn(MouseButton) + Clone + Send + Sync + 'static) -> Self {
+        Self::sequencing(move |event| {
+            if let Event::Mouse(button) = event {
+                action(button);
             }
         })
     }
@@ -177,4 +211,22 @@ pub fn remove_any_key_bind() {
 
 pub fn remove_key_bind(key: KeybdKey) {
     lock_registry().key_callbacks.remove(&key);
+}
+
+pub fn bind_any_button(action: Action) {
+    lock_registry().any_button_callback = Some(Arc::new(action))
+}
+
+pub fn bind_button(button: MouseButton, action: Action) {
+    lock_registry()
+        .button_callbacks
+        .insert(button, Arc::new(action));
+}
+
+pub fn remove_any_button_bind() {
+    lock_registry().any_button_callback = None;
+}
+
+pub fn remove_button_bind(button: MouseButton) {
+    lock_registry().button_callbacks.remove(&button);
 }

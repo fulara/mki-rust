@@ -18,6 +18,14 @@ fn main() {
         thread::sleep(Duration::from_millis(100));
     }));
 
+    MouseButton::Left.bind(|_| {
+        println!("Left Mouse button pressed");
+    });
+
+    MouseButton::Right.bind(|_| {
+        println!("Right Mouse button pressed");
+    });
+
     for key in [T, H, I, S, Space, A, Space, T, E, S, T].iter() {
         key.click();
     }

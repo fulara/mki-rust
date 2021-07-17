@@ -63,9 +63,11 @@ fn handle_libinput_event(event: input::Event) {
                 if let Some(mapped) = mouse_code_to_key(button_event.button()) {
                     match button_event.button_state() {
                         ButtonState::Pressed => {
-                            println!("Pressed: {:?}", mapped);
+                            lock_registry().event_down(Event::Mouse(mapped));
                         }
-                        ButtonState::Released => {}
+                        ButtonState::Released => {
+                            lock_registry().event_up(Event::Mouse(mapped));
+                        }
                     }
                 }
             }
