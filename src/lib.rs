@@ -4,6 +4,7 @@ mod buttons;
 mod keys;
 #[cfg(target_os = "linux")]
 mod linux;
+mod sequence;
 #[cfg(target_os = "windows")]
 mod windows;
 
@@ -11,6 +12,7 @@ pub use buttons::*;
 pub use keys::*;
 #[cfg(target_os = "linux")]
 pub use linux::*;
+pub use sequence::Sequence;
 #[cfg(target_os = "windows")]
 pub use windows::*;
 

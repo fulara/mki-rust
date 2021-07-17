@@ -47,5 +47,11 @@ fn main() {
 
     register_hotkey(&[LeftControl, U], || println!("Ctrl+U pressed"));
 
+    B.bind(|_| {
+        // So this seems awfully laggy on Linux, interesting. Is something wrong with impl?
+        Sequence::text("mini mini mini mini mini mini")
+            .unwrap()
+            .send();
+    });
     thread::sleep(Duration::from_secs(100));
 }
