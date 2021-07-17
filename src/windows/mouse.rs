@@ -1,10 +1,9 @@
 use crate::{Button, MouseButton};
 use std::mem::{size_of, transmute_copy};
 use winapi::um::winuser::{
-    GetAsyncKeyState, SendInput, INPUT, INPUT_MOUSE, LPINPUT, MOUSEEVENTF_LEFTDOWN,
-    MOUSEEVENTF_LEFTUP, MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_RIGHTDOWN,
-    MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_XDOWN, MOUSEEVENTF_XUP, MOUSEINPUT, VK_LBUTTON, VK_MBUTTON,
-    VK_RBUTTON, VK_XBUTTON1, VK_XBUTTON2, XBUTTON1, XBUTTON2,
+    SendInput, INPUT, INPUT_MOUSE, LPINPUT, MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP,
+    MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP,
+    MOUSEEVENTF_XDOWN, MOUSEEVENTF_XUP, MOUSEINPUT, XBUTTON1, XBUTTON2,
 };
 
 impl Button for MouseButton {
@@ -18,10 +17,6 @@ impl Button for MouseButton {
 
     fn release(&self) {
         mouse_release(*self);
-    }
-
-    fn is_pressed(&self) -> bool {
-        mouse_is_down(*self)
     }
 }
 
@@ -80,16 +75,4 @@ fn button_to_event_down(button: MouseButton) -> u32 {
         MouseButton::Middle => MOUSEEVENTF_MIDDLEUP,
         MouseButton::Side | MouseButton::Extra => MOUSEEVENTF_XUP,
     }
-}
-
-pub fn mouse_is_down(button: MouseButton) -> bool {
-    let vk = match button {
-        MouseButton::Left => VK_LBUTTON,
-        MouseButton::Right => VK_RBUTTON,
-        MouseButton::Middle => VK_MBUTTON,
-        MouseButton::Side => VK_XBUTTON1,
-        MouseButton::Extra => VK_XBUTTON2,
-    };
-    let state = unsafe { GetAsyncKeyState(vk) };
-    i32::from(state) & 0x8000 != 0
 }

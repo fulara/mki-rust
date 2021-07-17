@@ -29,8 +29,6 @@ pub trait Button {
     // Sends a down + release event
     fn click(&self);
     fn release(&self);
-
-    fn is_pressed(&self) -> bool;
 }
 
 // KeybdKey implements.
@@ -39,7 +37,6 @@ pub trait Key {
     fn release(&self);
     fn click(&self);
 
-    fn is_pressed(&self) -> bool;
     // Some buttons are toggleable like caps lock.
     fn is_toggled(&self) -> bool;
 }
@@ -52,6 +49,10 @@ impl KeybdKey {
     pub fn act_on(&self, action: Action) {
         bind_key(*self, action)
     }
+
+    pub fn is_pressed(&self) -> bool {
+        lock_registry().is_pressed(Event::Keyboard(*self))
+    }
 }
 
 impl MouseButton {
@@ -61,6 +62,10 @@ impl MouseButton {
 
     pub fn act_on(&self, action: Action) {
         bind_button(*self, action)
+    }
+
+    pub fn is_pressed(&self) -> bool {
+        lock_registry().is_pressed(Event::Mouse(*self))
     }
 }
 
