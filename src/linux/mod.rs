@@ -1,6 +1,8 @@
 pub mod keyboard;
 
-use input::event::keyboard::KeyboardEventTrait;
+use crate::details::lock_registry;
+use crate::keyboard::code_to_key;
+use input::event::keyboard::{KeyState, KeyboardEventTrait};
 use input::{Event, Libinput, LibinputInterface};
 use nix::fcntl::{open, OFlag};
 use nix::poll::{poll, PollFd, PollFlags};
@@ -52,7 +54,15 @@ fn handle_libinput_event(event: input::Event) {
     match event {
         Event::Device(_) => {}
         Event::Keyboard(kb) => {
-            println!("Just pressed: {:?}", keyboard::code_to_key(kb.key()));
+            let key = code_to_key(kb.key());
+            match kb.key_state() {
+                KeyState::Pressed => {
+                    lock_registry().key_down(key);
+                }
+                KeyState::Released => {
+                    lock_registry().key_up(key);
+                }
+            }
         }
         Event::Pointer(_) => {}
         Event::Touch(_) => {}
