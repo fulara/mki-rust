@@ -53,7 +53,7 @@ pub trait Key {
 
 impl Keyboard {
     /// Bind an action on this KeyboardKey, action will be invoked on a new thread.
-    pub fn bind(&self, handler: impl Fn(Keyboard) + Clone + Send + Sync + 'static) {
+    pub fn bind(&self, handler: impl Fn(Keyboard) + Send + Sync + 'static) {
         bind_key(*self, Action::handle_kb(handler))
     }
 
@@ -70,7 +70,7 @@ impl Keyboard {
 
 impl Mouse {
     /// Bind an action on this MouseButton, action will be invoked on a new thread.
-    pub fn bind(&self, handler: impl Fn(Mouse) + Clone + Send + Sync + 'static) {
+    pub fn bind(&self, handler: impl Fn(Mouse) + Send + Sync + 'static) {
         bind_button(*self, Action::handle_mouse(handler))
     }
 
@@ -141,7 +141,7 @@ impl Action {
     /// Use this if you want to send inputs from the handlers as on windows it is not allowed
     /// to pump new events.
     /// will not inhibit event.
-    pub fn handle_kb(action: impl Fn(Keyboard) + Clone + Send + Sync + 'static) -> Self {
+    pub fn handle_kb(action: impl Fn(Keyboard) + Send + Sync + 'static) -> Self {
         Self::handle(move |event| {
             if let Event::Keyboard(key) = event {
                 action(key);
@@ -150,7 +150,7 @@ impl Action {
     }
 
     /// Version of `handle_kb` but for mouse.
-    pub fn handle_mouse(action: impl Fn(Mouse) + Clone + Send + Sync + 'static) -> Self {
+    pub fn handle_mouse(action: impl Fn(Mouse) + Send + Sync + 'static) -> Self {
         Self::handle(move |event| {
             if let Event::Mouse(button) = event {
                 action(button);
@@ -159,7 +159,7 @@ impl Action {
     }
 
     /// General version of `handle_kb` for both Mouse and Keyboard.
-    pub fn handle(action: impl Fn(Event) + Clone + Send + Sync + 'static) -> Self {
+    pub fn handle(action: impl Fn(Event) + Send + Sync + 'static) -> Self {
         Action {
             callback: Box::new(move |event, state| {
                 if state == State::Pressed {
@@ -176,7 +176,7 @@ impl Action {
     /// will only react to key press not a release.
     /// will not inhibit event.
     /// Use this if you want a simple handler without spawning threads.
-    pub fn callback_kb(action: impl Fn(Keyboard) + Clone + Send + Sync + 'static) -> Self {
+    pub fn callback_kb(action: impl Fn(Keyboard) + Send + Sync + 'static) -> Self {
         Self::callback(move |event| {
             if let Event::Keyboard(key) = event {
                 action(key);
@@ -185,7 +185,7 @@ impl Action {
     }
 
     /// Version of `callback_kb` but for mouse.
-    pub fn callback_mouse(action: impl Fn(Mouse) + Clone + Send + Sync + 'static) -> Self {
+    pub fn callback_mouse(action: impl Fn(Mouse) + Send + Sync + 'static) -> Self {
         Self::callback(move |event| {
             if let Event::Mouse(button) = event {
                 action(button);
@@ -194,7 +194,7 @@ impl Action {
     }
 
     /// General version of `callback_kb` for both Mouse and Keyboard.
-    pub fn callback(action: impl Fn(Event) + Clone + Send + Sync + 'static) -> Self {
+    pub fn callback(action: impl Fn(Event) + Send + Sync + 'static) -> Self {
         Action {
             callback: Box::new(move |event, state| {
                 if state == State::Pressed {
@@ -212,7 +212,7 @@ impl Action {
     /// will only react to key press not a release.
     /// will not inhibit event.
     /// Use this if you want to have complicated actions that do not overlap.
-    pub fn sequencing_kb(action: impl Fn(Keyboard) + Clone + Send + Sync + 'static) -> Self {
+    pub fn sequencing_kb(action: impl Fn(Keyboard) + Send + Sync + 'static) -> Self {
         Self::sequencing(move |event| {
             if let Event::Keyboard(key) = event {
                 action(key);
@@ -221,7 +221,7 @@ impl Action {
     }
 
     /// Version of `sequencing_kb` but for mouse.
-    pub fn sequencing_mouse(action: impl Fn(Mouse) + Clone + Send + Sync + 'static) -> Self {
+    pub fn sequencing_mouse(action: impl Fn(Mouse) + Send + Sync + 'static) -> Self {
         Self::sequencing(move |event| {
             if let Event::Mouse(button) = event {
                 action(button);
@@ -230,7 +230,7 @@ impl Action {
     }
 
     /// General version of `sequencing_kb` for both Mouse and Keyboard.
-    pub fn sequencing(action: impl Fn(Event) + Clone + Send + Sync + 'static) -> Self {
+    pub fn sequencing(action: impl Fn(Event) + Send + Sync + 'static) -> Self {
         Action {
             callback: Box::new(move |event, state| {
                 if state == State::Pressed {
@@ -323,7 +323,7 @@ pub fn remove_button_bind(button: Mouse) {
 ///   register_hotkey(&[Keyboard::LeftControl, Keyboard::B], || println!("CTRL+B pressed"));
 /// }
 /// ```
-pub fn register_hotkey(sequence: &[Keyboard], callback: impl Fn() + Clone + Send + Sync + 'static) {
+pub fn register_hotkey(sequence: &[Keyboard], callback: impl Fn() + Send + Sync + 'static) {
     registry().register_hotkey(sequence, callback);
 }
 
