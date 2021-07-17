@@ -46,7 +46,7 @@ pub trait Key {
 
 impl KeybdKey {
     pub fn bind(&self, handler: impl Fn(KeybdKey) + Clone + Send + Sync + 'static) {
-        bind_key(*self, Action::handle(handler))
+        bind_key(*self, Action::handle_kb(handler))
     }
 
     pub fn act_on(&self, action: Action) {
@@ -60,10 +60,16 @@ pub enum InhibitEvent {
     No,
 }
 
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
+pub enum Event {
+    Keyboard(KeybdKey),
+    Mouse(MouseButton),
+}
+
 pub struct Action {
     /// What do you want to do on the key callback, see `defer` and `sequencer` to understand
     /// on which thread those are invoked.
-    pub callback: Box<dyn Fn(KeybdKey, State) + Send + Sync + 'static>,
+    pub callback: Box<dyn Fn(Event, State) + Send + Sync + 'static>,
     /// Whether to inhibit the event propagation to further applications down the call stack.
     /// This only works on windows.
     /// Note that for now the 'release' event cannot be inhibited.
@@ -84,11 +90,19 @@ impl Action {
     /// Use this if you want to send inputs from the handlers as on windows it is not allowed
     /// to pump new events.
     /// will not inhibit event.
-    pub fn handle(action: impl Fn(KeybdKey) + Clone + Send + Sync + 'static) -> Self {
+    pub fn handle_kb(action: impl Fn(KeybdKey) + Clone + Send + Sync + 'static) -> Self {
+        Self::handle(move |event| {
+            if let Event::Keyboard(key) = event {
+                action(key);
+            }
+        })
+    }
+
+    pub fn handle(action: impl Fn(Event) + Clone + Send + Sync + 'static) -> Self {
         Action {
-            callback: Box::new(move |key, state| {
+            callback: Box::new(move |event, state| {
                 if state == State::Pressed {
-                    action(key)
+                    action(event)
                 }
             }),
             inhibit: InhibitEvent::No,
@@ -101,11 +115,19 @@ impl Action {
     /// will only react to key press not a release.
     /// will not inhibit event.
     /// Use this if you want a simple handler without spawning threads.
-    pub fn callback(action: impl Fn(KeybdKey) + Clone + Send + Sync + 'static) -> Self {
+    pub fn callback_kb(action: impl Fn(KeybdKey) + Clone + Send + Sync + 'static) -> Self {
+        Self::callback(move |event| {
+            if let Event::Keyboard(key) = event {
+                action(key);
+            }
+        })
+    }
+
+    pub fn callback(action: impl Fn(Event) + Clone + Send + Sync + 'static) -> Self {
         Action {
-            callback: Box::new(move |key, state| {
+            callback: Box::new(move |event, state| {
                 if state == State::Pressed {
-                    action(key)
+                    action(event)
                 }
             }),
             inhibit: InhibitEvent::No,
@@ -119,11 +141,19 @@ impl Action {
     /// will only react to key press not a release.
     /// will not inhibit event.
     /// Use this if you want to have complicated actions that do not overlap.
-    pub fn sequencing(action: impl Fn(KeybdKey) + Clone + Send + Sync + 'static) -> Self {
+    pub fn sequencing_kb(action: impl Fn(KeybdKey) + Clone + Send + Sync + 'static) -> Self {
+        Self::sequencing(move |event| {
+            if let Event::Keyboard(key) = event {
+                action(key);
+            }
+        })
+    }
+
+    pub fn sequencing(action: impl Fn(Event) + Clone + Send + Sync + 'static) -> Self {
         Action {
-            callback: Box::new(move |key, state| {
+            callback: Box::new(move |event, state| {
                 if state == State::Pressed {
-                    action(key)
+                    action(event)
                 }
             }),
             inhibit: InhibitEvent::No,
