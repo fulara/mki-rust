@@ -11,7 +11,7 @@ fn main() {
         println!("AAAAAAnd we have a winner.");
     });
 
-    S.act(Action::sequencing(|_| {
+    S.act_on(Action::sequencing(|_| {
         println!("\nOkay mimicking a very slow operation... (1s sleep)");
         thread::sleep(Duration::from_millis(1000));
         println!("\nOkay action done (100ms sleep)");

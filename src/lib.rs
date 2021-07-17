@@ -49,7 +49,7 @@ impl KeybdKey {
         bind_key(*self, Action::handle(handler))
     }
 
-    pub fn act(&self, action: Action) {
+    pub fn act_on(&self, action: Action) {
         bind_key(*self, action)
     }
 }
