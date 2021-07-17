@@ -45,5 +45,7 @@ fn main() {
         key.click();
     }
 
+    register_hotkey(&[LeftControl, U], || println!("Ctrl+U pressed"));
+
     thread::sleep(Duration::from_secs(100));
 }

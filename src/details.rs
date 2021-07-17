@@ -18,13 +18,56 @@ struct Sequencer {
     tx: mpsc::Sender<Box<dyn Fn() + Send + Sync>>,
 }
 
+#[derive(Default)]
+struct Pressed {
+    pressed: Vec<Event>,
+    pressed_keys: Vec<KeybdKey>,
+}
+
+impl Pressed {
+    pub(crate) fn is_pressed(&self, event: Event) -> bool {
+        self.pressed.contains(&event)
+    }
+
+    // Order matters intentionally here.
+    pub(crate) fn are_pressed(&self, keys: &[KeybdKey]) -> bool {
+        self.pressed_keys == keys
+    }
+
+    fn pressed(&mut self, event: Event) {
+        if !self.pressed.contains(&event) {
+            self.pressed.push(event);
+
+            if let Event::Keyboard(key) = event {
+                self.pressed_keys.push(key);
+            }
+        }
+    }
+
+    fn released(&mut self, event: Event) {
+        if let Some(index) = self.pressed.iter().position(|e| *e == event) {
+            self.pressed.remove(index);
+
+            if let Event::Keyboard(key) = event {
+                let pos = self
+                    .pressed_keys
+                    .iter()
+                    .position(|k| *k == key)
+                    .expect("state mismtch");
+                self.pressed_keys.remove(pos);
+            }
+        }
+    }
+}
+
 pub(crate) struct Registry {
     pub(crate) key_callbacks: HashMap<KeybdKey, Arc<Action>>,
     pub(crate) button_callbacks: HashMap<MouseButton, Arc<Action>>,
     pub(crate) any_key_callback: Option<Arc<Action>>,
     pub(crate) any_button_callback: Option<Arc<Action>>,
+    pub(crate) hotkeys: HashMap<Vec<KeybdKey>, Box<dyn Fn() + Send + Sync + 'static>>,
 
-    pub(crate) pressed: Vec<Event>,
+    pressed: Pressed,
 
     _handle: JoinHandle<()>,
     sequencer: Option<Sequencer>,
@@ -46,7 +89,8 @@ impl Registry {
                 })
                 .unwrap(),
             sequencer: None,
-            pressed: Vec::new(),
+            pressed: Pressed::default(),
+            hotkeys: HashMap::new(),
         }
     }
 
@@ -99,7 +143,16 @@ impl Registry {
     }
 
     pub(crate) fn event_down(&mut self, event: Event) -> InhibitEvent {
-        self.pressed(event);
+        self.pressed.pressed(event);
+        if let Event::Keyboard(key) = event {
+            for (sequence, callback) in &self.hotkeys {
+                if sequence.last() == Some(&key) {
+                    if self.pressed.are_pressed(&sequence) {
+                        callback();
+                    }
+                }
+            }
+        }
         let state = State::Pressed;
         let mut inhibit = InhibitEvent::No;
         let (global_action, key_action) = self.map_event_to_actions(event);
@@ -116,7 +169,7 @@ impl Registry {
     }
 
     pub(crate) fn event_up(&mut self, event: Event) -> InhibitEvent {
-        self.released(event);
+        self.pressed.released(event);
         let state = State::Released;
         let (global_action, key_action) = self.map_event_to_actions(event);
         if let Some(action) = global_action {
@@ -137,40 +190,18 @@ impl Registry {
     }
 
     pub(crate) fn is_pressed(&self, event: Event) -> bool {
-        self.pressed.contains(&event)
+        self.pressed.is_pressed(event)
     }
 
-    // Order matters intentionally here.
-    pub(crate) fn are_pressed(&self, events: &[Event]) -> bool {
-        let mut iter = events.iter();
-        let mut searched = if let Some(searched) = iter.next() {
-            searched
-        } else {
-            // are_pressed invoked with empty events? sure.
-            return true;
-        };
-        for e in &self.pressed {
-            if searched == e {
-                searched = if let Some(searched) = iter.next() {
-                    searched
-                } else {
-                    return true;
-                };
-            }
-        }
-
-        false
+    pub(crate) fn register_hotkey(
+        &mut self,
+        sequence: &[KeybdKey],
+        handler: impl Fn() + Clone + Send + Sync + 'static,
+    ) {
+        self.hotkeys.insert(sequence.to_vec(), Box::new(handler));
     }
 
-    fn pressed(&mut self, event: Event) {
-        if !self.pressed.contains(&event) {
-            self.pressed.push(event);
-        }
-    }
-
-    fn released(&mut self, event: Event) {
-        if let Some(index) = self.pressed.iter().position(|e| *e == event) {
-            self.pressed.remove(index);
-        }
+    pub(crate) fn unregister_hotkey(&mut self, sequence: &[KeybdKey]) {
+        self.hotkeys.remove(&sequence.to_vec());
     }
 }
