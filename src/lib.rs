@@ -235,3 +235,11 @@ pub fn remove_any_button_bind() {
 pub fn remove_button_bind(button: MouseButton) {
     lock_registry().button_callbacks.remove(&button);
 }
+
+pub fn register_hotkey(sequence: &[KeybdKey], callback: impl Fn() + Clone + Send + Sync + 'static) {
+    lock_registry().register_hotkey(sequence, callback);
+}
+
+pub fn unregister_hotkey(sequence: &[KeybdKey]) {
+    lock_registry().unregister_hotkey(sequence);
+}
