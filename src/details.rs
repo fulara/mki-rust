@@ -129,6 +129,13 @@ impl Registry {
         InhibitEvent::No
     }
 
+    #[cfg(target_os = "windows")] // Not sure how to detect double on linux
+    pub(crate) fn event_click(&mut self, event: Event) -> InhibitEvent {
+        let inhibit = self.event_down(event);
+        self.event_up(event);
+        inhibit
+    }
+
     pub(crate) fn is_pressed(&self, event: Event) -> bool {
         self.pressed.contains(&event)
     }
