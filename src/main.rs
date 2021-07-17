@@ -10,6 +10,14 @@ fn main() {
     A.bind(|_| {
         println!("AAAAAAnd we have a winner.");
     });
+
+    S.act(Action::sequencing(|_| {
+        println!("\nOkay mimicking a very slow operation... (1s sleep)");
+        thread::sleep(Duration::from_millis(1000));
+        println!("\nOkay action done (100ms sleep)");
+        thread::sleep(Duration::from_millis(100));
+    }));
+
     for key in [T, H, I, S, Space, A, Space, T, E, S, T].iter() {
         key.click();
     }

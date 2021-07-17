@@ -50,6 +50,10 @@ impl KeybdKey {
     pub fn bind(&self, handler: impl Fn(KeybdKey) + Clone + Send + Sync + 'static) {
         bind_key(*self, Action::handle(handler))
     }
+
+    pub fn act(&self, action: Action) {
+        bind_key(*self, action)
+    }
 }
 
 #[derive(Copy, Clone, Ord, PartialOrd, Hash, Eq, PartialEq, Debug)]
@@ -184,6 +188,12 @@ pub struct Action {
 }
 
 impl Action {
+    /// Helper to create probably the most common key bind.
+    /// handler will be spawned in new thread
+    /// will only react to key press not a release.
+    /// Use this if you want to send inputs from the handlers as on windows it is not allowed
+    /// to pump new events.
+    /// will not inhibit event.
     pub fn handle(action: impl Fn(KeybdKey) + Clone + Send + Sync + 'static) -> Self {
         Action {
             callback: Box::new(move |key, state| {
@@ -197,6 +207,10 @@ impl Action {
         }
     }
 
+    /// Helper to create callback.
+    /// will only react to key press not a release.
+    /// will not inhibit event.
+    /// Use this if you want a simple handler without spawning threads.
     pub fn callback(action: impl Fn(KeybdKey) + Clone + Send + Sync + 'static) -> Self {
         Action {
             callback: Box::new(move |key, state| {
@@ -207,6 +221,24 @@ impl Action {
             inhibit: InhibitEvent::No,
             defer: false,
             sequencer: false,
+        }
+    }
+
+    /// Helper to create sequencing handler.
+    /// Handler will be executed one after another in a dedicated thread
+    /// will only react to key press not a release.
+    /// will not inhibit event.
+    /// Use this if you want to have complicated actions that do not overlap.
+    pub fn sequencing(action: impl Fn(KeybdKey) + Clone + Send + Sync + 'static) -> Self {
+        Action {
+            callback: Box::new(move |key, state| {
+                if state == KeyState::Pressed {
+                    action(key)
+                }
+            }),
+            inhibit: InhibitEvent::No,
+            defer: false,
+            sequencer: true,
         }
     }
 }
