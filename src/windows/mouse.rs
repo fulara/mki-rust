@@ -53,26 +53,28 @@ pub fn mouse_click(button: MouseButton) {
 
 fn button_to_mouse_data(button: MouseButton) -> u16 {
     match button {
-        MouseButton::Side => XBUTTON1,
-        MouseButton::Extra => XBUTTON2,
+        MouseButton::Side | MouseButton::DoubleSide => XBUTTON1,
+        MouseButton::Extra | MouseButton::DoubleExtra => XBUTTON2,
         _ => 0,
     }
 }
 
 fn button_to_event_up(button: MouseButton) -> u32 {
+    use MouseButton::*;
     match button {
-        MouseButton::Left => MOUSEEVENTF_LEFTDOWN,
-        MouseButton::Right => MOUSEEVENTF_RIGHTDOWN,
-        MouseButton::Middle => MOUSEEVENTF_MIDDLEDOWN,
-        MouseButton::Side | MouseButton::Extra => MOUSEEVENTF_XDOWN,
+        Left | DoubleLeft => MOUSEEVENTF_LEFTDOWN,
+        Right | DoubleRight => MOUSEEVENTF_RIGHTDOWN,
+        Middle | DoubleMiddle => MOUSEEVENTF_MIDDLEDOWN,
+        Side | DoubleSide | Extra | DoubleExtra => MOUSEEVENTF_XDOWN,
     }
 }
 
 fn button_to_event_down(button: MouseButton) -> u32 {
+    use MouseButton::*;
     match button {
-        MouseButton::Left => MOUSEEVENTF_LEFTUP,
-        MouseButton::Right => MOUSEEVENTF_RIGHTUP,
-        MouseButton::Middle => MOUSEEVENTF_MIDDLEUP,
-        MouseButton::Side | MouseButton::Extra => MOUSEEVENTF_XUP,
+        Left | DoubleLeft => MOUSEEVENTF_LEFTUP,
+        Right | DoubleRight => MOUSEEVENTF_RIGHTUP,
+        Middle | DoubleMiddle => MOUSEEVENTF_MIDDLEUP,
+        Side | DoubleSide | Extra | DoubleExtra => MOUSEEVENTF_XUP,
     }
 }

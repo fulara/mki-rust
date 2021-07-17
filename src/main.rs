@@ -27,6 +27,11 @@ fn main() {
         println!("Left Mouse button pressed");
     });
 
+    #[cfg(target_os = "windows")] // Not sure how to detect double on linux
+    MouseButton::DoubleLeft.bind(|_| {
+        println!("Double Left Click Mouse");
+    });
+
     MouseButton::Right.bind(|_| {
         println!("Right Mouse button pressed");
     });

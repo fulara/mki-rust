@@ -9,11 +9,13 @@ use std::mem::MaybeUninit;
 use std::ptr::null_mut;
 use winapi::shared::minwindef::{HINSTANCE, LPARAM, LRESULT, WPARAM};
 use winapi::shared::windef::HHOOK__;
-use winapi::um::winuser::MSLLHOOKSTRUCT;
 use winapi::um::winuser::{
     CallNextHookEx, GetMessageW, SetWindowsHookExW, KBDLLHOOKSTRUCT, MSG, WH_KEYBOARD_LL,
     WH_MOUSE_LL, WM_KEYDOWN, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_MBUTTONDOWN, WM_MBUTTONUP,
     WM_RBUTTONDOWN, WM_RBUTTONUP, WM_XBUTTONDOWN, WM_XBUTTONUP, XBUTTON1, XBUTTON2,
+};
+use winapi::um::winuser::{
+    MSLLHOOKSTRUCT, WM_LBUTTONDBLCLK, WM_MBUTTONDBLCLK, WM_RBUTTONDBLCLK, WM_XBUTTONDBLCLK,
 };
 
 pub(crate) fn install_hooks() {
@@ -93,18 +95,40 @@ unsafe extern "system" fn mouse_hook(
         code if code == WM_LBUTTONDOWN => {
             lock_registry().event_down(Event::Mouse(MouseButton::Left))
         }
+        code if code == WM_LBUTTONDBLCLK => {
+            lock_registry().event_click(Event::Mouse(MouseButton::DoubleLeft))
+        }
         code if code == WM_RBUTTONDOWN => {
             lock_registry().event_down(Event::Mouse(MouseButton::Right))
+        }
+        code if code == WM_RBUTTONDBLCLK => {
+            lock_registry().event_click(Event::Mouse(MouseButton::DoubleRight))
         }
         code if code == WM_MBUTTONDOWN => {
             lock_registry().event_down(Event::Mouse(MouseButton::Middle))
         }
+        code if code == WM_MBUTTONDBLCLK => {
+            lock_registry().event_down(Event::Mouse(MouseButton::DoubleMiddle))
+        }
         code if code == WM_XBUTTONDOWN => {
             lock_registry().event_down(Event::Mouse(maybe_x_button.unwrap()))
         }
+        code if code == WM_XBUTTONDBLCLK => {
+            if MouseButton::Side == maybe_x_button.unwrap() {
+                lock_registry().event_click(Event::Mouse(MouseButton::DoubleSide))
+            } else {
+                lock_registry().event_click(Event::Mouse(MouseButton::DoubleExtra))
+            }
+        }
+        code if code == WM_LBUTTONUP => lock_registry().event_up(Event::Mouse(MouseButton::Left)),
         code if code == WM_LBUTTONUP => lock_registry().event_up(Event::Mouse(MouseButton::Left)),
         code if code == WM_RBUTTONUP => lock_registry().event_up(Event::Mouse(MouseButton::Right)),
+        code if code == WM_RBUTTONUP => lock_registry().event_up(Event::Mouse(MouseButton::Right)),
         code if code == WM_MBUTTONUP => lock_registry().event_up(Event::Mouse(MouseButton::Middle)),
+        code if code == WM_MBUTTONUP => lock_registry().event_up(Event::Mouse(MouseButton::Middle)),
+        code if code == WM_XBUTTONUP => {
+            lock_registry().event_up(Event::Mouse(maybe_x_button.unwrap()))
+        }
         code if code == WM_XBUTTONUP => {
             lock_registry().event_up(Event::Mouse(maybe_x_button.unwrap()))
         }
