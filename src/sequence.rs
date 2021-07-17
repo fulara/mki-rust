@@ -1,10 +1,10 @@
-use crate::{Key, KeybdKey};
+use crate::{Key, Keyboard};
 use std::thread;
 use std::time::Duration;
 
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Sequence {
-    sequence: Vec<Vec<KeybdKey>>,
+    sequence: Vec<Vec<Keyboard>>,
 }
 
 impl Sequence {
@@ -12,7 +12,7 @@ impl Sequence {
         let mut sequence = Vec::new();
         for char in text.chars() {
             let lowercase = char.to_ascii_lowercase();
-            use KeybdKey::*;
+            use Keyboard::*;
             let key = match lowercase {
                 ' ' => Space,
                 'a' => A,

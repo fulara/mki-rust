@@ -1,4 +1,7 @@
-# Linux
+# mki - mouse-keyboard-input 
+Windows & Linux library for registring global input hooks and simulating keyboard and mouse events.
+
+## Linux
 
 ### Linux dependencies:
 *libxtst-dev*
@@ -12,7 +15,8 @@ Otherwise some initial key strokes are missed.
 cross rulez.
 
 to cross compile windows on linux:
-```
-argo install cross
+```rust
+cargo install cross
 cross check --target x86_64-pc-windows-gnu
+
 ```

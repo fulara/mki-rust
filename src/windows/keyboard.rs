@@ -1,4 +1,4 @@
-use crate::{Key, KeybdKey};
+use crate::{Key, Keyboard};
 use std::convert::TryInto;
 use std::mem::{size_of, transmute_copy};
 use winapi::shared::minwindef::WORD;
@@ -14,7 +14,7 @@ use winapi::um::winuser::{
     VK_SPACE, VK_SUBTRACT, VK_TAB, VK_UP,
 };
 
-impl Key for KeybdKey {
+impl Key for Keyboard {
     fn press(&self) {
         send_key_stroke(true, *self)
     }
@@ -37,7 +37,7 @@ impl Key for KeybdKey {
     }
 }
 
-pub fn send_key_stroke(press: bool, key: KeybdKey) {
+pub fn send_key_stroke(press: bool, key: Keyboard) {
     let action = if press {
         0 // 0 means to press.
     } else {
@@ -99,8 +99,8 @@ const VK_X: i32 = 0x58;
 const VK_Y: i32 = 0x59;
 const VK_Z: i32 = 0x5A;
 
-fn vk_code(key: KeybdKey) -> WORD {
-    use KeybdKey::*;
+fn vk_code(key: Keyboard) -> WORD {
+    use Keyboard::*;
 
     let vk: i32 = match key {
         BackSpace => VK_BACK,
@@ -211,9 +211,9 @@ fn vk_code(key: KeybdKey) -> WORD {
     vk.try_into().expect("vk does not fit into WORD")
 }
 
-impl From<i32> for KeybdKey {
+impl From<i32> for Keyboard {
     fn from(code: i32) -> Self {
-        use KeybdKey::*;
+        use Keyboard::*;
         match code {
             VK_BACK => BackSpace,
             VK_TAB => Tab,

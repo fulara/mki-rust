@@ -1,5 +1,5 @@
 #[derive(Copy, Clone, Ord, PartialOrd, Hash, Eq, PartialEq, Debug)]
-pub enum KeybdKey {
+pub enum Keyboard {
     A,
     B,
     C,

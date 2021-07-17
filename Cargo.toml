@@ -1,7 +1,14 @@
 [package]
-name = "mouse-keyboard-input"
+name = "mki"
 version = "0.1.0"
+description = "Windows and Linux library for registring global input hooks and simulating keyboard and mouse events."
 authors = ["fulara <ntszar@gmail.com>"]
+keywords = ["mouse", "keyboard", "input", "hook", "events"]
+readme = "README.md"
+homepage = "https://github.com/fulara/mki-rs"
+repository = "https://github.com/fulara/mki-rs"
+categories = ["api-bindings"]
+license = "MIT"
 edition = "2018"
 
 [dependencies]
