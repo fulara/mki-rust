@@ -8,15 +8,21 @@ mod windows;
 use crate::details::lock_registry;
 #[cfg(target_os = "linux")]
 pub use linux::*;
-use std::thread;
+use std::sync::Arc;
 #[cfg(target_os = "windows")]
 pub use windows::*;
 
-#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Copy, Clone, Ord, PartialOrd, Hash, Eq, PartialEq, Debug)]
 pub enum MouseButton {
     Left,
     Right,
     Middle,
+}
+
+#[derive(Copy, Clone, Ord, PartialOrd, Hash, Eq, PartialEq, Debug)]
+pub enum KeyState {
+    Pressed,
+    Released,
 }
 
 // MouseButton implements.
@@ -40,7 +46,7 @@ pub trait Key {
     fn is_toggled(&self) -> bool;
 }
 
-#[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
+#[derive(Copy, Clone, Ord, PartialOrd, Hash, Eq, PartialEq, Debug)]
 pub enum KeybdKey {
     A,
     B,
@@ -154,71 +160,63 @@ pub enum InhibitEvent {
     No,
 }
 
-/// Installs a callback that gets invoked whenever any key is pressed on the keyboard.
-/// It is discouraged to send any inputs from within those callbacks as that messes
-/// thread message queue. use the 'handler' version to send input from that callback.
-pub fn install_any_key_callback(
-    callback: impl Fn(KeybdKey) -> InhibitEvent + Send + Sync + 'static,
-) {
-    lock_registry().any_key_callback = Box::new(callback);
+pub struct Action {
+    /// What do you want to do on the key callback, see `defer` and `sequencer` to understand
+    /// on which thread those are invoked.
+    pub callback: Box<dyn Fn(KeybdKey, KeyState) + Send + Sync + 'static>,
+    /// Whether to inhibit the event propagation to further applications down the call stack.
+    /// This only works on windows.
+    /// Note that for now the 'release' event cannot be inhibited.
+    pub inhibit: InhibitEvent,
+    /// This is the recommended mode, to 'defer' this causes every callback to be spawned on a new thread.
+    /// On windows you cannot inject a new events from the callback invoked on the same thread
+    /// As that would result this application to be removed from the queue. hence deferring is recommended.
+    pub defer: bool,
+    /// Very similar to defer but the callbacks are all sequenced in one thread.
+    /// This is helpful if you are want to have slow tasks that should not overlap with one another.
+    pub sequencer: bool,
 }
 
-/// Installs a handler that gets invoked from a new thread whenever any key is pressed.
-pub fn install_any_key_handler(callback: impl Fn(KeybdKey) + Clone + Send + Sync + 'static) {
-    lock_registry().any_key_callback = Box::new(move |key| {
-        let callback = callback.clone();
-        thread::spawn(move || callback(key));
-        InhibitEvent::No
-    });
+impl Action {
+    pub fn handle(action: impl Fn(KeybdKey) + Clone + Send + Sync + 'static) -> Self {
+        Action {
+            callback: Box::new(move |key, state| {
+                if state == KeyState::Pressed {
+                    action(key)
+                }
+            }),
+            inhibit: InhibitEvent::No,
+            defer: true,
+            sequencer: false,
+        }
+    }
+
+    pub fn callback(action: impl Fn(KeybdKey) + Clone + Send + Sync + 'static) -> Self {
+        Action {
+            callback: Box::new(move |key, state| {
+                if state == KeyState::Pressed {
+                    action(key)
+                }
+            }),
+            inhibit: InhibitEvent::No,
+            defer: false,
+            sequencer: false,
+        }
+    }
 }
 
-pub fn install_any_key_sequencer(callback: impl Fn(KeybdKey) + Clone + Send + Sync + 'static) {
-    lock_registry().any_key_callback = Box::new(move |key| {
-        lock_registry().sequence(key, callback.clone());
-        InhibitEvent::No
-    });
+pub fn bind_any_key(action: Action) {
+    lock_registry().any_key_callback = Arc::new(action)
+}
+
+pub fn bind_key(key: KeybdKey, action: Action) {
+    lock_registry().key_callbacks.insert(key, Arc::new(action));
 }
 
 pub fn remove_any_key_bind() {
-    lock_registry().any_key_callback = Box::new(|_| InhibitEvent::No);
+    lock_registry().any_key_callback = Arc::new(Action::callback(|_| {}));
 }
 
-/// a version of `install_any_key_callback` but that gets activated only on given key.
-pub fn install_key_callback(
-    key: KeybdKey,
-    callback: impl Fn(KeybdKey) -> InhibitEvent + Send + Sync + 'static,
-) {
-    lock_registry()
-        .key_callbacks
-        .insert(key, Box::new(callback));
-}
-
-/// a version of `install_any_key_handler` but that gets activated only on given key.
-pub fn install_key_handler(
-    key: KeybdKey,
-    callback: impl Fn(KeybdKey) + Clone + Send + Sync + 'static,
-) {
-    let handler = Box::new(move |key| {
-        let callback = callback.clone();
-        thread::spawn(move || callback(key));
-        InhibitEvent::No
-    });
-    lock_registry().key_callbacks.insert(key, handler);
-}
-
-pub fn install_key_sequencer(
-    key: KeybdKey,
-    callback: impl Fn(KeybdKey) + Clone + Send + Sync + 'static,
-) {
-    lock_registry().key_callbacks.insert(
-        key,
-        Box::new(move |key| {
-            lock_registry().sequence(key, callback.clone());
-            InhibitEvent::No
-        }),
-    );
-}
-
-pub fn remove_key_callback(key: KeybdKey) {
+pub fn remove_key_bind(key: KeybdKey) {
     lock_registry().key_callbacks.remove(&key);
 }

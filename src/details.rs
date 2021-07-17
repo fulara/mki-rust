@@ -1,4 +1,4 @@
-use crate::{install_hooks, process_message};
+use crate::{install_hooks, process_message, Action, KeyState};
 use crate::{InhibitEvent, KeybdKey};
 use std::collections::HashMap;
 use std::sync::{mpsc, Arc, Mutex, MutexGuard};
@@ -19,9 +19,8 @@ struct Sequencer {
 }
 
 pub(crate) struct Registry {
-    pub(crate) key_callbacks:
-        HashMap<KeybdKey, Box<dyn Fn(KeybdKey) -> InhibitEvent + Send + Sync>>,
-    pub(crate) any_key_callback: Box<dyn Fn(KeybdKey) -> InhibitEvent + Send + Sync>,
+    pub(crate) key_callbacks: HashMap<KeybdKey, Arc<Action>>,
+    pub(crate) any_key_callback: Arc<Action>,
 
     _handle: JoinHandle<()>,
     sequencer: Option<Sequencer>,
@@ -31,7 +30,7 @@ impl Registry {
     pub(crate) fn new() -> Self {
         Registry {
             key_callbacks: HashMap::new(),
-            any_key_callback: Box::new(|_| InhibitEvent::No),
+            any_key_callback: Arc::new(Action::callback(|_| {})),
             _handle: thread::Builder::new()
                 .name("mki-lstn".into())
                 .spawn(|| {
@@ -44,13 +43,9 @@ impl Registry {
         }
     }
 
-    pub(crate) fn sequence(
-        &mut self,
-        key: KeybdKey,
-        action: impl Fn(KeybdKey) + Clone + Send + Sync + 'static,
-    ) {
+    pub(crate) fn sequence(&mut self, key: KeybdKey, state: KeyState, action: Arc<Action>) {
         let erased_action = Box::new(move || {
-            action(key);
+            (action.callback)(key, state);
         });
         let sequencer = self.sequencer.get_or_insert({
             let (tx, rx) = mpsc::channel::<Box<dyn Fn() + Send + Sync>>();
@@ -70,14 +65,36 @@ impl Registry {
         let _ = sequencer.tx.send(erased_action);
     }
 
-    pub(crate) fn key_down(&self, key: KeybdKey) {
-        (self.any_key_callback)(key);
-        if let Some(mapping) = self.key_callbacks.get(&key) {
-            mapping(key);
+    fn invoke_action(&mut self, action: Arc<Action>, key: KeybdKey, state: KeyState) {
+        if action.defer {
+            thread::spawn(move || {
+                (action.callback)(key, state);
+            });
+        } else if action.sequencer {
+            self.sequence(key, state, action)
+        } else {
+            (action.callback)(key, state);
         }
     }
 
-    pub(crate) fn key_up(&self, _key: KeybdKey) {
-        // TODO: I guess?
+    pub(crate) fn key_down(&mut self, key: KeybdKey) -> InhibitEvent {
+        let state = KeyState::Pressed;
+        self.invoke_action(Arc::clone(&self.any_key_callback), key, state);
+        let mut inhibit = self.any_key_callback.inhibit;
+        if let Some(action) = self.key_callbacks.get(&key).cloned() {
+            inhibit = action.inhibit;
+            self.invoke_action(action, key, state);
+        }
+        inhibit
+    }
+
+    pub(crate) fn key_up(&mut self, key: KeybdKey) -> InhibitEvent {
+        let state = KeyState::Released;
+        self.invoke_action(Arc::clone(&self.any_key_callback), key, state);
+        (self.any_key_callback.callback)(key, state);
+        if let Some(action) = self.key_callbacks.get(&key).cloned() {
+            self.invoke_action(action, key, state);
+        }
+        InhibitEvent::No
     }
 }
