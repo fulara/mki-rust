@@ -18,6 +18,11 @@ fn main() {
         thread::sleep(Duration::from_millis(100));
     }));
 
+    R.bind(|_| {
+        println!("R Pressed sending Q");
+        Q.click();
+    });
+
     MouseButton::Left.bind(|_| {
         println!("Left Mouse button pressed");
     });
