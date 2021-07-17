@@ -69,4 +69,15 @@ impl Registry {
         });
         let _ = sequencer.tx.send(erased_action);
     }
+
+    pub(crate) fn key_down(&self, key: KeybdKey) {
+        (self.any_key_callback)(key);
+        if let Some(mapping) = self.key_callbacks.get(&key) {
+            mapping(key);
+        }
+    }
+
+    pub(crate) fn key_up(&self, _key: KeybdKey) {
+        // TODO: I guess?
+    }
 }

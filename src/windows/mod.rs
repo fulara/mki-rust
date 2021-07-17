@@ -54,11 +54,7 @@ unsafe extern "system" fn keybd_hook(
         //     dwExtraInfo: ULONG_PTR,
         // }}
         let key: KeybdKey = vk.into();
-        let registry = lock_registry();
-        inhibit = (registry.any_key_callback)(key);
-        if let Some(callback) = registry.key_callbacks.get(&key) {
-            inhibit = callback(key)
-        }
+        lock_registry().key_down(key);
     }
 
     if inhibit == InhibitEvent::Yes {
