@@ -1,31 +1,21 @@
 pub(crate) mod details;
 
+mod buttons;
+mod keys;
 #[cfg(target_os = "linux")]
 mod linux;
 #[cfg(target_os = "windows")]
 mod windows;
 
-use crate::details::lock_registry;
+pub use buttons::*;
+pub use keys::*;
 #[cfg(target_os = "linux")]
 pub use linux::*;
-use std::sync::Arc;
 #[cfg(target_os = "windows")]
 pub use windows::*;
 
-#[derive(Copy, Clone, Ord, PartialOrd, Hash, Eq, PartialEq, Debug)]
-pub enum MouseButton {
-    Left,
-    Right,
-    Middle,
-    Side,
-    Extra,
-    #[cfg(target_os = "linux")]
-    Forward,
-    #[cfg(target_os = "linux")]
-    Back,
-    #[cfg(target_os = "linux")]
-    Task,
-}
+use crate::details::lock_registry;
+use std::sync::Arc;
 
 #[derive(Copy, Clone, Ord, PartialOrd, Hash, Eq, PartialEq, Debug)]
 pub enum KeyState {
@@ -62,114 +52,6 @@ impl KeybdKey {
     pub fn act(&self, action: Action) {
         bind_key(*self, action)
     }
-}
-
-#[derive(Copy, Clone, Ord, PartialOrd, Hash, Eq, PartialEq, Debug)]
-pub enum KeybdKey {
-    A,
-    B,
-    C,
-    D,
-    E,
-    F,
-    G,
-    H,
-    I,
-    J,
-    K,
-    L,
-    M,
-    N,
-    O,
-    P,
-    Q,
-    R,
-    S,
-    T,
-    U,
-    V,
-    W,
-    X,
-    Y,
-    Z,
-    Number0,
-    Number1,
-    Number2,
-    Number3,
-    Number4,
-    Number5,
-    Number6,
-    Number7,
-    Number8,
-    Number9,
-    LeftAlt,
-    RightAlt,
-    LeftShift,
-    RightShift,
-    LeftControl,
-    RightControl,
-    BackSpace,
-    Tab,
-    Enter,
-    Escape,
-    Space,
-    PageUp,
-    PageDown,
-    Home,
-    Left,
-    Up,
-    Right,
-    Down,
-    Print,
-    PrintScreen,
-    Insert,
-    Delete,
-    LeftWindows,
-    RightWindows,
-    F1,
-    F2,
-    F3,
-    F4,
-    F5,
-    F6,
-    F7,
-    F8,
-    F9,
-    F10,
-    F11,
-    F12,
-    F13,
-    F14,
-    F15,
-    F16,
-    F17,
-    F18,
-    F19,
-    F20,
-    F21,
-    F22,
-    F23,
-    F24,
-    NumLock,
-    ScrollLock,
-    CapsLock,
-    Numpad0,
-    Numpad1,
-    Numpad2,
-    Numpad3,
-    Numpad4,
-    Numpad5,
-    Numpad6,
-    Numpad7,
-    Numpad8,
-    Numpad9,
-    Multiply,
-    Add,
-    Separator,
-    Subtract,
-    Decimal,
-    Divide,
-    Other(i32),
 }
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
