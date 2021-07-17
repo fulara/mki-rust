@@ -1,15 +1,15 @@
 use crate::{install_hooks, process_message, Action, Event, Mouse, State};
 use crate::{InhibitEvent, Keyboard};
 use std::collections::HashMap;
-use std::sync::{mpsc, Arc, Mutex, MutexGuard};
+use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 use std::thread::JoinHandle;
 
-pub(crate) fn lock_registry() -> MutexGuard<'static, Registry> {
+pub(crate) fn registry() -> &'static Registry {
     lazy_static::lazy_static! {
-        static ref REGISTRY: Arc<Mutex<Registry>> = Arc::new(Mutex::new(Registry::new()));
+        static ref REGISTRY: Registry = Registry::new();
     }
-    REGISTRY.lock().unwrap()
+    &REGISTRY
 }
 
 struct Sequencer {
@@ -61,25 +61,25 @@ impl Pressed {
 }
 
 pub(crate) struct Registry {
-    pub(crate) key_callbacks: HashMap<Keyboard, Arc<Action>>,
-    pub(crate) button_callbacks: HashMap<Mouse, Arc<Action>>,
-    pub(crate) any_key_callback: Option<Arc<Action>>,
-    pub(crate) any_button_callback: Option<Arc<Action>>,
-    pub(crate) hotkeys: HashMap<Vec<Keyboard>, Box<dyn Fn() + Send + Sync + 'static>>,
+    pub(crate) key_callbacks: Mutex<HashMap<Keyboard, Arc<Action>>>,
+    pub(crate) button_callbacks: Mutex<HashMap<Mouse, Arc<Action>>>,
+    pub(crate) any_key_callback: Mutex<Option<Arc<Action>>>,
+    pub(crate) any_button_callback: Mutex<Option<Arc<Action>>>,
+    pub(crate) hotkeys: Mutex<HashMap<Vec<Keyboard>, Box<dyn Fn() + Send + Sync + 'static>>>,
 
-    pressed: Pressed,
+    pressed: Mutex<Pressed>,
 
     _handle: JoinHandle<()>,
-    sequencer: Option<Sequencer>,
+    sequencer: Mutex<Option<Sequencer>>,
 }
 
 impl Registry {
     pub(crate) fn new() -> Self {
         Registry {
-            key_callbacks: HashMap::new(),
-            button_callbacks: HashMap::new(),
-            any_key_callback: None,
-            any_button_callback: None,
+            key_callbacks: Mutex::new(HashMap::new()),
+            button_callbacks: Mutex::new(HashMap::new()),
+            any_key_callback: Mutex::new(None),
+            any_button_callback: Mutex::new(None),
             _handle: thread::Builder::new()
                 .name("mki-lstn".into())
                 .spawn(|| {
@@ -88,17 +88,18 @@ impl Registry {
                     process_message();
                 })
                 .unwrap(),
-            sequencer: None,
-            pressed: Pressed::default(),
-            hotkeys: HashMap::new(),
+            sequencer: Mutex::new(None),
+            pressed: Mutex::new(Pressed::default()),
+            hotkeys: Mutex::new(HashMap::new()),
         }
     }
 
-    pub(crate) fn sequence(&mut self, event: Event, state: State, action: Arc<Action>) {
+    pub(crate) fn sequence(&self, event: Event, state: State, action: Arc<Action>) {
         let erased_action = Box::new(move || {
             (action.callback)(event, state);
         });
-        let sequencer = self.sequencer.get_or_insert({
+        let mut sequencer = self.sequencer.lock().unwrap();
+        let sequencer = sequencer.get_or_insert({
             let (tx, rx) = mpsc::channel::<Box<dyn Fn() + Send + Sync>>();
             thread::Builder::new();
             Sequencer {
@@ -116,7 +117,7 @@ impl Registry {
         let _ = sequencer.tx.send(erased_action);
     }
 
-    fn invoke_action(&mut self, action: Arc<Action>, event: Event, state: State) {
+    fn invoke_action(&self, action: Arc<Action>, event: Event, state: State) {
         if action.defer {
             thread::spawn(move || {
                 (action.callback)(event, state);
@@ -131,23 +132,23 @@ impl Registry {
     fn map_event_to_actions(&self, event: Event) -> (Option<Arc<Action>>, Option<Arc<Action>>) {
         let (global_action, key_action) = match event {
             Event::Keyboard(key) => (
-                self.any_key_callback.clone(),
-                self.key_callbacks.get(&key).cloned(),
+                self.any_key_callback.lock().unwrap().clone(),
+                self.key_callbacks.lock().unwrap().get(&key).cloned(),
             ),
             Event::Mouse(button) => (
-                self.any_button_callback.clone(),
-                self.button_callbacks.get(&button).cloned(),
+                self.any_button_callback.lock().unwrap().clone(),
+                self.button_callbacks.lock().unwrap().get(&button).cloned(),
             ),
         };
         (global_action, key_action)
     }
 
-    pub(crate) fn event_down(&mut self, event: Event) -> InhibitEvent {
-        self.pressed.pressed(event);
+    pub(crate) fn event_down(&self, event: Event) -> InhibitEvent {
+        self.pressed.lock().unwrap().pressed(event);
         if let Event::Keyboard(key) = event {
-            for (sequence, callback) in &self.hotkeys {
+            for (sequence, callback) in self.hotkeys.lock().unwrap().iter() {
                 if sequence.last() == Some(&key) {
-                    if self.pressed.are_pressed(&sequence) {
+                    if self.pressed.lock().unwrap().are_pressed(&sequence) {
                         callback();
                     }
                 }
@@ -168,8 +169,8 @@ impl Registry {
         inhibit
     }
 
-    pub(crate) fn event_up(&mut self, event: Event) -> InhibitEvent {
-        self.pressed.released(event);
+    pub(crate) fn event_up(&self, event: Event) -> InhibitEvent {
+        self.pressed.lock().unwrap().released(event);
         let state = State::Released;
         let (global_action, key_action) = self.map_event_to_actions(event);
         if let Some(action) = global_action {
@@ -183,25 +184,28 @@ impl Registry {
     }
 
     #[cfg(target_os = "windows")] // Not sure how to detect double on linux
-    pub(crate) fn event_click(&mut self, event: Event) -> InhibitEvent {
+    pub(crate) fn event_click(&self, event: Event) -> InhibitEvent {
         let inhibit = self.event_down(event);
         self.event_up(event);
         inhibit
     }
 
     pub(crate) fn is_pressed(&self, event: Event) -> bool {
-        self.pressed.is_pressed(event)
+        self.pressed.lock().unwrap().is_pressed(event)
     }
 
     pub(crate) fn register_hotkey(
-        &mut self,
+        &self,
         sequence: &[Keyboard],
         handler: impl Fn() + Clone + Send + Sync + 'static,
     ) {
-        self.hotkeys.insert(sequence.to_vec(), Box::new(handler));
+        self.hotkeys
+            .lock()
+            .unwrap()
+            .insert(sequence.to_vec(), Box::new(handler));
     }
 
-    pub(crate) fn unregister_hotkey(&mut self, sequence: &[Keyboard]) {
-        self.hotkeys.remove(&sequence.to_vec());
+    pub(crate) fn unregister_hotkey(&self, sequence: &[Keyboard]) {
+        self.hotkeys.lock().unwrap().remove(&sequence.to_vec());
     }
 }
