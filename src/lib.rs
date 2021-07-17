@@ -244,7 +244,7 @@ impl Action {
 }
 
 pub fn bind_any_key(action: Action) {
-    lock_registry().any_key_callback = Arc::new(action)
+    lock_registry().any_key_callback = Some(Arc::new(action))
 }
 
 pub fn bind_key(key: KeybdKey, action: Action) {
@@ -252,7 +252,7 @@ pub fn bind_key(key: KeybdKey, action: Action) {
 }
 
 pub fn remove_any_key_bind() {
-    lock_registry().any_key_callback = Arc::new(Action::callback(|_| {}));
+    lock_registry().any_key_callback = None;
 }
 
 pub fn remove_key_bind(key: KeybdKey) {
