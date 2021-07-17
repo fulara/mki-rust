@@ -11,8 +11,9 @@ use winapi::shared::minwindef::{HINSTANCE, LPARAM, LRESULT, WPARAM};
 use winapi::shared::windef::HHOOK__;
 use winapi::um::winuser::{
     CallNextHookEx, GetMessageW, SetWindowsHookExW, KBDLLHOOKSTRUCT, MSG, WH_KEYBOARD_LL,
-    WH_MOUSE_LL, WM_KEYDOWN, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_MBUTTONDOWN, WM_MBUTTONUP,
-    WM_RBUTTONDOWN, WM_RBUTTONUP, WM_XBUTTONDOWN, WM_XBUTTONUP, XBUTTON1, XBUTTON2,
+    WH_MOUSE_LL, WM_KEYDOWN, WM_KEYUP, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_MBUTTONDOWN, WM_MBUTTONUP,
+    WM_RBUTTONDOWN, WM_RBUTTONUP, WM_SYSKEYDOWN, WM_SYSKEYUP, WM_XBUTTONDOWN, WM_XBUTTONUP,
+    XBUTTON1, XBUTTON2,
 };
 use winapi::um::winuser::{
     MSLLHOOKSTRUCT, WM_LBUTTONDBLCLK, WM_MBUTTONDBLCLK, WM_RBUTTONDBLCLK, WM_XBUTTONDBLCLK,
@@ -40,26 +41,33 @@ unsafe extern "system" fn keybd_hook(
     w_param: WPARAM,
     l_param: LPARAM,
 ) -> LRESULT {
+    let vk: i32 = (*(l_param as *const KBDLLHOOKSTRUCT))
+        .vkCode
+        .try_into()
+        .expect("vkCode does not fit in i32");
+    // https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-keydown
+    // Says that we can find the repeat bit here, however that does not apply to lowlvlkb hook which this is.
+    // Because IDE is not capable of following to the definition here it is:
+    // STRUCT!{struct KBDLLHOOKSTRUCT {
+    //     vkCode: DWORD,
+    //     scanCode: DWORD,
+    //     flags: DWORD,
+    //     time: DWORD,
+    //     dwExtraInfo: ULONG_PTR,
+    // }}
+
     let mut inhibit = InhibitEvent::No;
     // Note this seemingly is only activated when ALT is not pressed, need to handle WM_SYSKEYDOWN then
     // Test that case.
-    if w_param as u32 == WM_KEYDOWN {
-        let vk: i32 = (*(l_param as *const KBDLLHOOKSTRUCT))
-            .vkCode
-            .try_into()
-            .expect("vkCode does not fit in i32");
-        // https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-keydown
-        // Says that we can find the repeat bit here, however that does not apply to lowlvlkb hook which this is.
-        // Because IDE is not capable of following to the definition here it is:
-        // STRUCT!{struct KBDLLHOOKSTRUCT {
-        //     vkCode: DWORD,
-        //     scanCode: DWORD,
-        //     flags: DWORD,
-        //     time: DWORD,
-        //     dwExtraInfo: ULONG_PTR,
-        // }}
-        let key: KeybdKey = vk.into();
-        inhibit = lock_registry().event_down(Event::Keyboard(key));
+    let key: KeybdKey = vk.into();
+    match w_param as u32 {
+        code if code == WM_KEYDOWN || code == WM_SYSKEYDOWN => {
+            inhibit = lock_registry().event_down(Event::Keyboard(key));
+        }
+        code if code == WM_KEYUP || code == WM_SYSKEYUP => {
+            inhibit = lock_registry().event_up(Event::Keyboard(key));
+        }
+        _ => {}
     }
 
     if inhibit == InhibitEvent::Yes {
