@@ -158,11 +158,11 @@ impl Registry {
         let mut inhibit = InhibitEvent::No;
         let (global_action, key_action) = self.map_event_to_actions(event);
         if let Some(action) = global_action {
-            inhibit = action.inhibit;
+            inhibit = action.inhibit.clone();
             self.invoke_action(action, event, state);
         }
         if let Some(action) = key_action {
-            inhibit = action.inhibit;
+            inhibit = action.inhibit.clone();
             self.invoke_action(action, event, state);
         }
 

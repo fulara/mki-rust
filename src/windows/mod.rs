@@ -70,7 +70,7 @@ unsafe extern "system" fn keybd_hook(
         _ => {}
     }
 
-    if inhibit == InhibitEvent::Yes {
+    if inhibit.should_inhibit() {
         1
     } else {
         CallNextHookEx(null_mut(), code, w_param, l_param)
@@ -130,7 +130,7 @@ unsafe extern "system" fn mouse_hook(
         code if code == WM_XBUTTONUP => registry().event_up(Event::Mouse(maybe_x_button.unwrap())),
         _ => InhibitEvent::No,
     };
-    if inhibit == InhibitEvent::Yes {
+    if inhibit.should_inhibit() {
         1
     } else {
         CallNextHookEx(null_mut(), code, w_param, l_param)
