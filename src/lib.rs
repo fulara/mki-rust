@@ -18,7 +18,7 @@ use crate::details::lock_registry;
 use std::sync::Arc;
 
 #[derive(Copy, Clone, Ord, PartialOrd, Hash, Eq, PartialEq, Debug)]
-pub enum KeyState {
+pub enum State {
     Pressed,
     Released,
 }
@@ -63,7 +63,7 @@ pub enum InhibitEvent {
 pub struct Action {
     /// What do you want to do on the key callback, see `defer` and `sequencer` to understand
     /// on which thread those are invoked.
-    pub callback: Box<dyn Fn(KeybdKey, KeyState) + Send + Sync + 'static>,
+    pub callback: Box<dyn Fn(KeybdKey, State) + Send + Sync + 'static>,
     /// Whether to inhibit the event propagation to further applications down the call stack.
     /// This only works on windows.
     /// Note that for now the 'release' event cannot be inhibited.
@@ -87,7 +87,7 @@ impl Action {
     pub fn handle(action: impl Fn(KeybdKey) + Clone + Send + Sync + 'static) -> Self {
         Action {
             callback: Box::new(move |key, state| {
-                if state == KeyState::Pressed {
+                if state == State::Pressed {
                     action(key)
                 }
             }),
@@ -104,7 +104,7 @@ impl Action {
     pub fn callback(action: impl Fn(KeybdKey) + Clone + Send + Sync + 'static) -> Self {
         Action {
             callback: Box::new(move |key, state| {
-                if state == KeyState::Pressed {
+                if state == State::Pressed {
                     action(key)
                 }
             }),
@@ -122,7 +122,7 @@ impl Action {
     pub fn sequencing(action: impl Fn(KeybdKey) + Clone + Send + Sync + 'static) -> Self {
         Action {
             callback: Box::new(move |key, state| {
-                if state == KeyState::Pressed {
+                if state == State::Pressed {
                     action(key)
                 }
             }),

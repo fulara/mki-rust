@@ -1,4 +1,4 @@
-use crate::{install_hooks, process_message, Action, KeyState};
+use crate::{install_hooks, process_message, Action, State};
 use crate::{InhibitEvent, KeybdKey};
 use std::collections::HashMap;
 use std::sync::{mpsc, Arc, Mutex, MutexGuard};
@@ -43,7 +43,7 @@ impl Registry {
         }
     }
 
-    pub(crate) fn sequence(&mut self, key: KeybdKey, state: KeyState, action: Arc<Action>) {
+    pub(crate) fn sequence(&mut self, key: KeybdKey, state: State, action: Arc<Action>) {
         let erased_action = Box::new(move || {
             (action.callback)(key, state);
         });
@@ -65,7 +65,7 @@ impl Registry {
         let _ = sequencer.tx.send(erased_action);
     }
 
-    fn invoke_action(&mut self, action: Arc<Action>, key: KeybdKey, state: KeyState) {
+    fn invoke_action(&mut self, action: Arc<Action>, key: KeybdKey, state: State) {
         if action.defer {
             thread::spawn(move || {
                 (action.callback)(key, state);
@@ -78,7 +78,7 @@ impl Registry {
     }
 
     pub(crate) fn key_down(&mut self, key: KeybdKey) -> InhibitEvent {
-        let state = KeyState::Pressed;
+        let state = State::Pressed;
         let mut inhibit = InhibitEvent::No;
         if let Some(action) = self.any_key_callback.clone() {
             inhibit = action.inhibit;
@@ -92,7 +92,7 @@ impl Registry {
     }
 
     pub(crate) fn key_up(&mut self, key: KeybdKey) -> InhibitEvent {
-        let state = KeyState::Released;
+        let state = State::Released;
         if let Some(action) = self.any_key_callback.clone() {
             self.invoke_action(action, key, state);
         }
