@@ -1,5 +1,5 @@
 #[derive(Copy, Clone, Ord, PartialOrd, Hash, Eq, PartialEq, Debug)]
-pub enum MouseButton {
+pub enum Mouse {
     // TODO: double clicks.
     Left,
     #[cfg(target_os = "windows")] // Not sure how to detect double on linux

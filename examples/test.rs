@@ -1,9 +1,9 @@
-use mouse_keyboard_input::*;
+use mki::*;
 use std::thread;
 use std::time::Duration;
 
 fn main() {
-    use KeybdKey::*;
+    use Keyboard::*;
     bind_any_key(Action::handle_kb(|key| {
         println!("Pressed: {:?}", key);
     }));

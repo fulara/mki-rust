@@ -43,8 +43,8 @@ pub trait Key {
     fn is_toggled(&self) -> bool;
 }
 
-impl KeybdKey {
-    pub fn bind(&self, handler: impl Fn(KeybdKey) + Clone + Send + Sync + 'static) {
+impl Keyboard {
+    pub fn bind(&self, handler: impl Fn(Keyboard) + Clone + Send + Sync + 'static) {
         bind_key(*self, Action::handle_kb(handler))
     }
 
@@ -57,8 +57,8 @@ impl KeybdKey {
     }
 }
 
-impl MouseButton {
-    pub fn bind(&self, handler: impl Fn(MouseButton) + Clone + Send + Sync + 'static) {
+impl Mouse {
+    pub fn bind(&self, handler: impl Fn(Mouse) + Clone + Send + Sync + 'static) {
         bind_button(*self, Action::handle_mouse(handler))
     }
 
@@ -79,8 +79,8 @@ pub enum InhibitEvent {
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub enum Event {
-    Keyboard(KeybdKey),
-    Mouse(MouseButton),
+    Keyboard(Keyboard),
+    Mouse(Mouse),
 }
 
 pub struct Action {
@@ -107,7 +107,7 @@ impl Action {
     /// Use this if you want to send inputs from the handlers as on windows it is not allowed
     /// to pump new events.
     /// will not inhibit event.
-    pub fn handle_kb(action: impl Fn(KeybdKey) + Clone + Send + Sync + 'static) -> Self {
+    pub fn handle_kb(action: impl Fn(Keyboard) + Clone + Send + Sync + 'static) -> Self {
         Self::handle(move |event| {
             if let Event::Keyboard(key) = event {
                 action(key);
@@ -115,7 +115,7 @@ impl Action {
         })
     }
 
-    pub fn handle_mouse(action: impl Fn(MouseButton) + Clone + Send + Sync + 'static) -> Self {
+    pub fn handle_mouse(action: impl Fn(Mouse) + Clone + Send + Sync + 'static) -> Self {
         Self::handle(move |event| {
             if let Event::Mouse(button) = event {
                 action(button);
@@ -140,7 +140,7 @@ impl Action {
     /// will only react to key press not a release.
     /// will not inhibit event.
     /// Use this if you want a simple handler without spawning threads.
-    pub fn callback_kb(action: impl Fn(KeybdKey) + Clone + Send + Sync + 'static) -> Self {
+    pub fn callback_kb(action: impl Fn(Keyboard) + Clone + Send + Sync + 'static) -> Self {
         Self::callback(move |event| {
             if let Event::Keyboard(key) = event {
                 action(key);
@@ -148,7 +148,7 @@ impl Action {
         })
     }
 
-    pub fn callback_mouse(action: impl Fn(MouseButton) + Clone + Send + Sync + 'static) -> Self {
+    pub fn callback_mouse(action: impl Fn(Mouse) + Clone + Send + Sync + 'static) -> Self {
         Self::callback(move |event| {
             if let Event::Mouse(button) = event {
                 action(button);
@@ -174,7 +174,7 @@ impl Action {
     /// will only react to key press not a release.
     /// will not inhibit event.
     /// Use this if you want to have complicated actions that do not overlap.
-    pub fn sequencing_kb(action: impl Fn(KeybdKey) + Clone + Send + Sync + 'static) -> Self {
+    pub fn sequencing_kb(action: impl Fn(Keyboard) + Clone + Send + Sync + 'static) -> Self {
         Self::sequencing(move |event| {
             if let Event::Keyboard(key) = event {
                 action(key);
@@ -182,7 +182,7 @@ impl Action {
         })
     }
 
-    pub fn sequencing_mouse(action: impl Fn(MouseButton) + Clone + Send + Sync + 'static) -> Self {
+    pub fn sequencing_mouse(action: impl Fn(Mouse) + Clone + Send + Sync + 'static) -> Self {
         Self::sequencing(move |event| {
             if let Event::Mouse(button) = event {
                 action(button);
@@ -208,7 +208,7 @@ pub fn bind_any_key(action: Action) {
     lock_registry().any_key_callback = Some(Arc::new(action))
 }
 
-pub fn bind_key(key: KeybdKey, action: Action) {
+pub fn bind_key(key: Keyboard, action: Action) {
     lock_registry().key_callbacks.insert(key, Arc::new(action));
 }
 
@@ -216,7 +216,7 @@ pub fn remove_any_key_bind() {
     lock_registry().any_key_callback = None;
 }
 
-pub fn remove_key_bind(key: KeybdKey) {
+pub fn remove_key_bind(key: Keyboard) {
     lock_registry().key_callbacks.remove(&key);
 }
 
@@ -224,7 +224,7 @@ pub fn bind_any_button(action: Action) {
     lock_registry().any_button_callback = Some(Arc::new(action))
 }
 
-pub fn bind_button(button: MouseButton, action: Action) {
+pub fn bind_button(button: Mouse, action: Action) {
     lock_registry()
         .button_callbacks
         .insert(button, Arc::new(action));
@@ -234,14 +234,14 @@ pub fn remove_any_button_bind() {
     lock_registry().any_button_callback = None;
 }
 
-pub fn remove_button_bind(button: MouseButton) {
+pub fn remove_button_bind(button: Mouse) {
     lock_registry().button_callbacks.remove(&button);
 }
 
-pub fn register_hotkey(sequence: &[KeybdKey], callback: impl Fn() + Clone + Send + Sync + 'static) {
+pub fn register_hotkey(sequence: &[Keyboard], callback: impl Fn() + Clone + Send + Sync + 'static) {
     lock_registry().register_hotkey(sequence, callback);
 }
 
-pub fn unregister_hotkey(sequence: &[KeybdKey]) {
+pub fn unregister_hotkey(sequence: &[Keyboard]) {
     lock_registry().unregister_hotkey(sequence);
 }

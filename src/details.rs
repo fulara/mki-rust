@@ -1,5 +1,5 @@
-use crate::{install_hooks, process_message, Action, Event, MouseButton, State};
-use crate::{InhibitEvent, KeybdKey};
+use crate::{install_hooks, process_message, Action, Event, Mouse, State};
+use crate::{InhibitEvent, Keyboard};
 use std::collections::HashMap;
 use std::sync::{mpsc, Arc, Mutex, MutexGuard};
 use std::thread;
@@ -21,7 +21,7 @@ struct Sequencer {
 #[derive(Default)]
 struct Pressed {
     pressed: Vec<Event>,
-    pressed_keys: Vec<KeybdKey>,
+    pressed_keys: Vec<Keyboard>,
 }
 
 impl Pressed {
@@ -30,7 +30,7 @@ impl Pressed {
     }
 
     // Order matters intentionally here.
-    pub(crate) fn are_pressed(&self, keys: &[KeybdKey]) -> bool {
+    pub(crate) fn are_pressed(&self, keys: &[Keyboard]) -> bool {
         self.pressed_keys == keys
     }
 
@@ -61,11 +61,11 @@ impl Pressed {
 }
 
 pub(crate) struct Registry {
-    pub(crate) key_callbacks: HashMap<KeybdKey, Arc<Action>>,
-    pub(crate) button_callbacks: HashMap<MouseButton, Arc<Action>>,
+    pub(crate) key_callbacks: HashMap<Keyboard, Arc<Action>>,
+    pub(crate) button_callbacks: HashMap<Mouse, Arc<Action>>,
     pub(crate) any_key_callback: Option<Arc<Action>>,
     pub(crate) any_button_callback: Option<Arc<Action>>,
-    pub(crate) hotkeys: HashMap<Vec<KeybdKey>, Box<dyn Fn() + Send + Sync + 'static>>,
+    pub(crate) hotkeys: HashMap<Vec<Keyboard>, Box<dyn Fn() + Send + Sync + 'static>>,
 
     pressed: Pressed,
 
@@ -195,13 +195,13 @@ impl Registry {
 
     pub(crate) fn register_hotkey(
         &mut self,
-        sequence: &[KeybdKey],
+        sequence: &[Keyboard],
         handler: impl Fn() + Clone + Send + Sync + 'static,
     ) {
         self.hotkeys.insert(sequence.to_vec(), Box::new(handler));
     }
 
-    pub(crate) fn unregister_hotkey(&mut self, sequence: &[KeybdKey]) {
+    pub(crate) fn unregister_hotkey(&mut self, sequence: &[Keyboard]) {
         self.hotkeys.remove(&sequence.to_vec());
     }
 }

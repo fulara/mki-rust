@@ -1,7 +1,6 @@
-use crate::{KeybdKey, MouseButton};
+use crate::{Keyboard, Mouse};
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::time::Duration;
-use uinput::event::controller::Mouse;
 use uinput::event::keyboard::Key;
 use uinput::event::relative::Position;
 use uinput::event::Code;
@@ -12,7 +11,7 @@ enum KeybdAction {
     Click,
 }
 
-impl crate::Key for KeybdKey {
+impl crate::Key for Keyboard {
     fn press(&self) {
         send_key_stroke(KeybdAction::Press, *self);
     }
@@ -30,7 +29,7 @@ impl crate::Key for KeybdKey {
     }
 }
 
-fn send_key_stroke(action: KeybdAction, key: KeybdKey) {
+fn send_key_stroke(action: KeybdAction, key: Keyboard) {
     let mut device = device();
     if let Some(key) = key_to_event(key) {
         match action {
@@ -67,8 +66,8 @@ fn device() -> MutexGuard<'static, uinput::Device> {
     DEVICE.lock().unwrap()
 }
 
-pub fn key_to_event(key: KeybdKey) -> Option<Key> {
-    use KeybdKey::*;
+pub fn key_to_event(key: Keyboard) -> Option<Key> {
+    use Keyboard::*;
     match key {
         BackSpace => Some(Key::BackSpace),
         Tab => Some(Key::Tab),
@@ -177,8 +176,8 @@ pub fn key_to_event(key: KeybdKey) -> Option<Key> {
     }
 }
 
-pub(crate) fn kb_code_to_key(code: u32) -> KeybdKey {
-    use KeybdKey::*;
+pub(crate) fn kb_code_to_key(code: u32) -> Keyboard {
+    use Keyboard::*;
     match code as i32 {
         code if Key::BackSpace.code() == code => BackSpace,
         code if Key::Tab.code() == code => Tab,
@@ -277,16 +276,17 @@ pub(crate) fn kb_code_to_key(code: u32) -> KeybdKey {
     }
 }
 
-pub(crate) fn mouse_code_to_key(code: u32) -> Option<MouseButton> {
+pub(crate) fn mouse_code_to_key(code: u32) -> Option<Mouse> {
+    use uinput::event::controller::Mouse as IMouse;
     let mapped = Some(match code as i32 {
-        code if Mouse::Left.code() == code => MouseButton::Left,
-        code if Mouse::Right.code() == code => MouseButton::Right,
-        code if Mouse::Middle.code() == code => MouseButton::Middle,
-        code if Mouse::Side.code() == code => MouseButton::Side,
-        code if Mouse::Extra.code() == code => MouseButton::Extra,
-        code if Mouse::Forward.code() == code => MouseButton::Forward,
-        code if Mouse::Back.code() == code => MouseButton::Back,
-        code if Mouse::Task.code() == code => MouseButton::Task,
+        code if IMouse::Left.code() == code => Mouse::Left,
+        code if IMouse::Right.code() == code => Mouse::Right,
+        code if IMouse::Middle.code() == code => Mouse::Middle,
+        code if IMouse::Side.code() == code => Mouse::Side,
+        code if IMouse::Extra.code() == code => Mouse::Extra,
+        code if IMouse::Forward.code() == code => Mouse::Forward,
+        code if IMouse::Back.code() == code => Mouse::Back,
+        code if IMouse::Task.code() == code => Mouse::Task,
         _ => return None,
     });
 
