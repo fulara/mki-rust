@@ -1,6 +1,7 @@
-use crate::KeybdKey;
+use crate::{KeybdKey, MouseButton};
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::time::Duration;
+use uinput::event::controller::Mouse;
 use uinput::event::keyboard::Key;
 use uinput::event::relative::Position;
 use uinput::event::Code;
@@ -182,7 +183,7 @@ pub fn key_to_event(key: KeybdKey) -> Option<Key> {
     }
 }
 
-pub(crate) fn code_to_key(code: u32) -> KeybdKey {
+pub(crate) fn kb_code_to_key(code: u32) -> KeybdKey {
     use KeybdKey::*;
     match code as i32 {
         code if Key::BackSpace.code() == code => BackSpace,
@@ -280,4 +281,20 @@ pub(crate) fn code_to_key(code: u32) -> KeybdKey {
         // Print, PrintScreen, LeftWin, RightWin, Add, Subtract, Multiply, Divide, Separator, Subtract
         // Decimal Divide
     }
+}
+
+pub(crate) fn mouse_code_to_key(code: u32) -> Option<MouseButton> {
+    let mapped = Some(match code as i32 {
+        code if Mouse::Left.code() == code => MouseButton::Left,
+        code if Mouse::Right.code() == code => MouseButton::Right,
+        code if Mouse::Middle.code() == code => MouseButton::Middle,
+        code if Mouse::Side.code() == code => MouseButton::Side,
+        code if Mouse::Extra.code() == code => MouseButton::Extra,
+        code if Mouse::Forward.code() == code => MouseButton::Forward,
+        code if Mouse::Back.code() == code => MouseButton::Back,
+        code if Mouse::Task.code() == code => MouseButton::Task,
+        _ => return None,
+    });
+
+    mapped
 }

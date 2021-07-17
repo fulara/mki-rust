@@ -1,8 +1,10 @@
 pub mod keyboard;
 
 use crate::details::lock_registry;
-use crate::keyboard::code_to_key;
+use crate::keyboard::{kb_code_to_key, mouse_code_to_key};
 use input::event::keyboard::{KeyState, KeyboardEventTrait};
+use input::event::pointer::ButtonState;
+use input::event::pointer::PointerEvent::Button;
 use input::{Event, Libinput, LibinputInterface};
 use nix::fcntl::{open, OFlag};
 use nix::poll::{poll, PollFd, PollFlags};
@@ -45,7 +47,7 @@ fn handle_libinput_event(event: input::Event) {
     match event {
         Event::Device(_) => {}
         Event::Keyboard(kb) => {
-            let key = code_to_key(kb.key());
+            let key = kb_code_to_key(kb.key());
             match kb.key_state() {
                 KeyState::Pressed => {
                     lock_registry().key_down(key);
@@ -55,7 +57,18 @@ fn handle_libinput_event(event: input::Event) {
                 }
             }
         }
-        Event::Pointer(_) => {}
+        Event::Pointer(pointer) => {
+            if let Button(button_event) = pointer {
+                if let Some(mapped) = mouse_code_to_key(button_event.button()) {
+                    match button_event.button_state() {
+                        ButtonState::Pressed => {
+                            println!("Pressed: {:?}", mapped);
+                        }
+                        ButtonState::Released => {}
+                    }
+                }
+            }
+        }
         Event::Touch(_) => {}
         Event::Tablet(_) => {}
         Event::TabletPad(_) => {}
