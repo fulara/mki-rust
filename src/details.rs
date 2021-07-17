@@ -24,6 +24,8 @@ pub(crate) struct Registry {
     pub(crate) any_key_callback: Option<Arc<Action>>,
     pub(crate) any_button_callback: Option<Arc<Action>>,
 
+    pub(crate) pressed: Vec<Event>,
+
     _handle: JoinHandle<()>,
     sequencer: Option<Sequencer>,
 }
@@ -44,6 +46,7 @@ impl Registry {
                 })
                 .unwrap(),
             sequencer: None,
+            pressed: Vec::new(),
         }
     }
 
@@ -96,6 +99,7 @@ impl Registry {
     }
 
     pub(crate) fn event_down(&mut self, event: Event) -> InhibitEvent {
+        self.pressed(event);
         let state = State::Pressed;
         let mut inhibit = InhibitEvent::No;
         let (global_action, key_action) = self.map_event_to_actions(event);
@@ -112,6 +116,7 @@ impl Registry {
     }
 
     pub(crate) fn event_up(&mut self, event: Event) -> InhibitEvent {
+        self.released(event);
         let state = State::Released;
         let (global_action, key_action) = self.map_event_to_actions(event);
         if let Some(action) = global_action {
@@ -122,5 +127,43 @@ impl Registry {
         }
 
         InhibitEvent::No
+    }
+
+    pub(crate) fn is_pressed(&self, event: Event) -> bool {
+        self.pressed.contains(&event)
+    }
+
+    // Order matters intentionally here.
+    pub(crate) fn are_pressed(&self, events: &[Event]) -> bool {
+        let mut iter = events.iter();
+        let mut searched = if let Some(searched) = iter.next() {
+            searched
+        } else {
+            // are_pressed invoked with empty events? sure.
+            return true;
+        };
+        for e in &self.pressed {
+            if searched == e {
+                searched = if let Some(searched) = iter.next() {
+                    searched
+                } else {
+                    return true;
+                };
+            }
+        }
+
+        false
+    }
+
+    fn pressed(&mut self, event: Event) {
+        if !self.pressed.contains(&event) {
+            self.pressed.push(event);
+        }
+    }
+
+    fn released(&mut self, event: Event) {
+        if let Some(index) = self.pressed.iter().position(|e| *e == event) {
+            self.pressed.remove(index);
+        }
     }
 }

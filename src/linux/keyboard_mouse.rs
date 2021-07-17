@@ -25,10 +25,6 @@ impl crate::Key for KeybdKey {
         send_key_stroke(KeybdAction::Click, *self);
     }
 
-    fn is_pressed(&self) -> bool {
-        todo!()
-    }
-
     fn is_toggled(&self) -> bool {
         todo!()
     }
@@ -70,8 +66,6 @@ fn device() -> MutexGuard<'static, uinput::Device> {
     }
     DEVICE.lock().unwrap()
 }
-
-fn is_pressed() {}
 
 pub fn key_to_event(key: KeybdKey) -> Option<Key> {
     use KeybdKey::*;

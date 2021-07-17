@@ -31,8 +31,14 @@ fn main() {
         println!("Right Mouse button pressed");
     });
 
+    O.bind(|_| loop {
+        println!("Observing T: {}", T.is_pressed());
+        thread::sleep(Duration::from_secs(1));
+    });
+
     for key in [T, H, I, S, Space, A, Space, T, E, S, T].iter() {
         key.click();
     }
+
     thread::sleep(Duration::from_secs(100));
 }
