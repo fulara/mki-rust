@@ -6,10 +6,10 @@ fn main() {
     use KeybdKey::*;
     bind_any_key(Action::handle(|key| {
         println!("Pressed: {:?}", key);
-        if key == KeybdKey::A {
-            println!("And the winner is.");
-        }
     }));
+    A.bind(|_| {
+        println!("AAAAAAnd we have a winner.");
+    });
     for key in [T, H, I, S, Space, A, Space, T, E, S, T].iter() {
         key.click();
     }
