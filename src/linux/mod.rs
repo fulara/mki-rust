@@ -1,7 +1,7 @@
-pub mod keyboard;
+pub mod keyboard_mouse;
 
 use crate::details::lock_registry;
-use crate::keyboard::{kb_code_to_key, mouse_code_to_key};
+use crate::keyboard_mouse::{kb_code_to_key, mouse_code_to_key};
 use input::event::keyboard::{KeyState, KeyboardEventTrait};
 use input::event::pointer::ButtonState;
 use input::event::pointer::PointerEvent::Button;
