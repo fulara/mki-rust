@@ -20,7 +20,7 @@ struct Sequencer {
 
 pub(crate) struct Registry {
     pub(crate) key_callbacks: HashMap<KeybdKey, Arc<Action>>,
-    pub(crate) any_key_callback: Arc<Action>,
+    pub(crate) any_key_callback: Option<Arc<Action>>,
 
     _handle: JoinHandle<()>,
     sequencer: Option<Sequencer>,
@@ -30,7 +30,7 @@ impl Registry {
     pub(crate) fn new() -> Self {
         Registry {
             key_callbacks: HashMap::new(),
-            any_key_callback: Arc::new(Action::callback(|_| {})),
+            any_key_callback: None,
             _handle: thread::Builder::new()
                 .name("mki-lstn".into())
                 .spawn(|| {
@@ -79,8 +79,11 @@ impl Registry {
 
     pub(crate) fn key_down(&mut self, key: KeybdKey) -> InhibitEvent {
         let state = KeyState::Pressed;
-        self.invoke_action(Arc::clone(&self.any_key_callback), key, state);
-        let mut inhibit = self.any_key_callback.inhibit;
+        let mut inhibit = InhibitEvent::No;
+        if let Some(action) = self.any_key_callback.clone() {
+            inhibit = action.inhibit;
+            self.invoke_action(action, key, state);
+        }
         if let Some(action) = self.key_callbacks.get(&key).cloned() {
             inhibit = action.inhibit;
             self.invoke_action(action, key, state);
@@ -90,8 +93,9 @@ impl Registry {
 
     pub(crate) fn key_up(&mut self, key: KeybdKey) -> InhibitEvent {
         let state = KeyState::Released;
-        self.invoke_action(Arc::clone(&self.any_key_callback), key, state);
-        (self.any_key_callback.callback)(key, state);
+        if let Some(action) = self.any_key_callback.clone() {
+            self.invoke_action(action, key, state);
+        }
         if let Some(action) = self.key_callbacks.get(&key).cloned() {
             self.invoke_action(action, key, state);
         }
