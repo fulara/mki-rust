@@ -85,12 +85,30 @@ impl Mouse {
     }
 }
 
-#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Clone)]
 /// Works only on windows.
 /// Whether to propagate the event for applications down the callstack.
 pub enum InhibitEvent {
     Yes,
+    Maybe(Arc<Box<dyn Fn() -> InhibitEvent + Send + Sync>>),
     No,
+}
+
+impl InhibitEvent {
+    #[cfg(target_os = "windows")]
+    fn should_inhibit(&self) -> bool {
+        match self {
+            InhibitEvent::Yes => false,
+            InhibitEvent::Maybe(f) => {
+                matches!(f(), InhibitEvent::No)
+            }
+            InhibitEvent::No => true,
+        }
+    }
+
+    pub fn maybe(f: impl Fn() -> InhibitEvent + Send + Sync + 'static) -> Self {
+        InhibitEvent::Maybe(Arc::new(Box::new(f)))
+    }
 }
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Debug)]
@@ -106,9 +124,6 @@ pub struct Action {
     /// Whether to inhibit the event propagation to further applications down the call stack.
     /// This only works on windows.
     /// Note that for now the 'release' event cannot be inhibited.
-    // TODO: inhibit being just a yes no flag may be a bit silly.
-    // It would be better for this to be a lambda but then its too easy for a deadlock.
-    // that's because of this lock_registry just being locked left and right need to rework it.
     pub inhibit: InhibitEvent,
     /// This is the recommended mode, to 'defer' this causes every callback to be spawned on a new thread.
     /// On windows you cannot inject a new events from the callback invoked on the same thread

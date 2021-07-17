@@ -31,7 +31,7 @@ fn main() {
 
     // This binds action to a W key,
     // that W press will not be sent to the following services ( only on windows )
-    // whenever Left Shift is Pressed
+    // whenever Caps Lock is toggled
     // Action will be executed on separate thread.
     bind_key(
         Keyboard::W,
@@ -39,7 +39,13 @@ fn main() {
             callback: Box::new(|event, state| {
                 println!("key: {:?} changed state now is: {:?}", event, state);
             }),
-            inhibit: InhibitEvent::No,
+            inhibit: InhibitEvent::maybe(|| {
+                if Keyboard::CapsLock.is_toggled() {
+                    InhibitEvent::Yes
+                } else {
+                    InhibitEvent::No
+                }
+            }),
             sequencer: false,
             defer: true,
         },
