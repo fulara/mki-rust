@@ -1,4 +1,4 @@
-use crate::{install_hooks, process_message, Action, State};
+use crate::{install_hooks, process_message, Action, Event, MouseButton, State};
 use crate::{InhibitEvent, KeybdKey};
 use std::collections::HashMap;
 use std::sync::{mpsc, Arc, Mutex, MutexGuard};
@@ -20,7 +20,9 @@ struct Sequencer {
 
 pub(crate) struct Registry {
     pub(crate) key_callbacks: HashMap<KeybdKey, Arc<Action>>,
+    pub(crate) button_callbacks: HashMap<MouseButton, Arc<Action>>,
     pub(crate) any_key_callback: Option<Arc<Action>>,
+    pub(crate) any_button_callback: Option<Arc<Action>>,
 
     _handle: JoinHandle<()>,
     sequencer: Option<Sequencer>,
@@ -30,7 +32,9 @@ impl Registry {
     pub(crate) fn new() -> Self {
         Registry {
             key_callbacks: HashMap::new(),
+            button_callbacks: HashMap::new(),
             any_key_callback: None,
+            any_button_callback: None,
             _handle: thread::Builder::new()
                 .name("mki-lstn".into())
                 .spawn(|| {
@@ -43,9 +47,9 @@ impl Registry {
         }
     }
 
-    pub(crate) fn sequence(&mut self, key: KeybdKey, state: State, action: Arc<Action>) {
+    pub(crate) fn sequence(&mut self, event: Event, state: State, action: Arc<Action>) {
         let erased_action = Box::new(move || {
-            (action.callback)(key, state);
+            (action.callback)(event, state);
         });
         let sequencer = self.sequencer.get_or_insert({
             let (tx, rx) = mpsc::channel::<Box<dyn Fn() + Send + Sync>>();
@@ -65,40 +69,58 @@ impl Registry {
         let _ = sequencer.tx.send(erased_action);
     }
 
-    fn invoke_action(&mut self, action: Arc<Action>, key: KeybdKey, state: State) {
+    fn invoke_action(&mut self, action: Arc<Action>, event: Event, state: State) {
         if action.defer {
             thread::spawn(move || {
-                (action.callback)(key, state);
+                (action.callback)(event, state);
             });
         } else if action.sequencer {
-            self.sequence(key, state, action)
+            self.sequence(event, state, action)
         } else {
-            (action.callback)(key, state);
+            (action.callback)(event, state);
         }
     }
 
-    pub(crate) fn key_down(&mut self, key: KeybdKey) -> InhibitEvent {
+    fn map_event_to_actions(&self, event: Event) -> (Option<Arc<Action>>, Option<Arc<Action>>) {
+        let (global_action, key_action) = match event {
+            Event::Keyboard(key) => (
+                self.any_key_callback.clone(),
+                self.key_callbacks.get(&key).cloned(),
+            ),
+            Event::Mouse(button) => (
+                self.any_button_callback.clone(),
+                self.button_callbacks.get(&button).cloned(),
+            ),
+        };
+        (global_action, key_action)
+    }
+
+    pub(crate) fn event_down(&mut self, event: Event) -> InhibitEvent {
         let state = State::Pressed;
         let mut inhibit = InhibitEvent::No;
-        if let Some(action) = self.any_key_callback.clone() {
+        let (global_action, key_action) = self.map_event_to_actions(event);
+        if let Some(action) = global_action {
             inhibit = action.inhibit;
-            self.invoke_action(action, key, state);
+            self.invoke_action(action, event, state);
         }
-        if let Some(action) = self.key_callbacks.get(&key).cloned() {
+        if let Some(action) = key_action {
             inhibit = action.inhibit;
-            self.invoke_action(action, key, state);
+            self.invoke_action(action, event, state);
         }
+
         inhibit
     }
 
-    pub(crate) fn key_up(&mut self, key: KeybdKey) -> InhibitEvent {
+    pub(crate) fn event_up(&mut self, event: Event) -> InhibitEvent {
         let state = State::Released;
-        if let Some(action) = self.any_key_callback.clone() {
-            self.invoke_action(action, key, state);
+        let (global_action, key_action) = self.map_event_to_actions(event);
+        if let Some(action) = global_action {
+            self.invoke_action(action, event, state);
         }
-        if let Some(action) = self.key_callbacks.get(&key).cloned() {
-            self.invoke_action(action, key, state);
+        if let Some(action) = key_action {
+            self.invoke_action(action, event, state);
         }
+
         InhibitEvent::No
     }
 }

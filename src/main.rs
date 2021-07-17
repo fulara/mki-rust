@@ -4,14 +4,14 @@ use std::time::Duration;
 
 fn main() {
     use KeybdKey::*;
-    bind_any_key(Action::handle(|key| {
+    bind_any_key(Action::handle_kb(|key| {
         println!("Pressed: {:?}", key);
     }));
     A.bind(|_| {
         println!("AAAAAAnd we have a winner.");
     });
 
-    S.act_on(Action::sequencing(|_| {
+    S.act_on(Action::sequencing_kb(|_| {
         println!("\nOkay mimicking a very slow operation... (1s sleep)");
         thread::sleep(Duration::from_millis(1000));
         println!("\nOkay action done (100ms sleep)");

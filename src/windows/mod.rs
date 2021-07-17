@@ -3,7 +3,7 @@ pub mod keyboard;
 pub mod mouse;
 
 use crate::details::lock_registry;
-use crate::{InhibitEvent, KeybdKey};
+use crate::{Event, InhibitEvent, KeybdKey};
 use std::convert::TryInto;
 use std::mem::MaybeUninit;
 use std::ptr::null_mut;
@@ -54,7 +54,7 @@ unsafe extern "system" fn keybd_hook(
         //     dwExtraInfo: ULONG_PTR,
         // }}
         let key: KeybdKey = vk.into();
-        inhibit = lock_registry().key_down(key);
+        inhibit = lock_registry().event_down(Event::Keyboard(key));
     }
 
     if inhibit == InhibitEvent::Yes {
