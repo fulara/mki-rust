@@ -46,6 +46,12 @@ pub trait Key {
     fn is_toggled(&self) -> bool;
 }
 
+impl KeybdKey {
+    pub fn bind(&self, handler: impl Fn(KeybdKey) + Clone + Send + Sync + 'static) {
+        bind_key(*self, Action::handle(handler))
+    }
+}
+
 #[derive(Copy, Clone, Ord, PartialOrd, Hash, Eq, PartialEq, Debug)]
 pub enum KeybdKey {
     A,
