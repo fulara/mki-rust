@@ -1,6 +1,6 @@
 pub mod keyboard_mouse;
 
-use crate::details::lock_registry;
+use crate::details::registry;
 use crate::keyboard_mouse::{kb_code_to_key, mouse_code_to_key};
 use crate::Event;
 use input::event::keyboard::{KeyState, KeyboardEventTrait};
@@ -51,10 +51,10 @@ fn handle_libinput_event(event: input::Event) {
             let key = kb_code_to_key(kb.key());
             match kb.key_state() {
                 KeyState::Pressed => {
-                    lock_registry().event_down(Event::Keyboard(key));
+                    registry().event_down(Event::Keyboard(key));
                 }
                 KeyState::Released => {
-                    lock_registry().event_up(Event::Keyboard(key));
+                    registry().event_up(Event::Keyboard(key));
                 }
             }
         }
@@ -63,10 +63,10 @@ fn handle_libinput_event(event: input::Event) {
                 if let Some(mapped) = mouse_code_to_key(button_event.button()) {
                     match button_event.button_state() {
                         ButtonState::Pressed => {
-                            lock_registry().event_down(Event::Mouse(mapped));
+                            registry().event_down(Event::Mouse(mapped));
                         }
                         ButtonState::Released => {
-                            lock_registry().event_up(Event::Mouse(mapped));
+                            registry().event_up(Event::Mouse(mapped));
                         }
                     }
                 }

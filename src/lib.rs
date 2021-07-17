@@ -16,7 +16,7 @@ pub use sequence::Sequence;
 #[cfg(target_os = "windows")]
 pub use windows::*;
 
-use crate::details::lock_registry;
+use crate::details::registry;
 use std::sync::Arc;
 
 #[derive(Copy, Clone, Ord, PartialOrd, Hash, Eq, PartialEq, Debug)]
@@ -64,7 +64,7 @@ impl Keyboard {
 
     /// Whether given KeyboardKey is pressed.
     pub fn is_pressed(&self) -> bool {
-        lock_registry().is_pressed(Event::Keyboard(*self))
+        registry().is_pressed(Event::Keyboard(*self))
     }
 }
 
@@ -81,7 +81,7 @@ impl Mouse {
 
     /// Whether given MouseButton is pressed.
     pub fn is_pressed(&self) -> bool {
-        lock_registry().is_pressed(Event::Mouse(*self))
+        registry().is_pressed(Event::Mouse(*self))
     }
 }
 
@@ -238,7 +238,7 @@ impl Action {
 /// }
 /// ```
 pub fn bind_any_key(action: Action) {
-    lock_registry().any_key_callback = Some(Arc::new(action))
+    *registry().any_key_callback.lock().unwrap() = Some(Arc::new(action))
 }
 
 /// Install any key handler that will be invoked on specified key presses.
@@ -250,7 +250,11 @@ pub fn bind_any_key(action: Action) {
 /// }
 /// ```
 pub fn bind_key(key: Keyboard, action: Action) {
-    lock_registry().key_callbacks.insert(key, Arc::new(action));
+    registry()
+        .key_callbacks
+        .lock()
+        .unwrap()
+        .insert(key, Arc::new(action));
 }
 
 /// Removes global key handler.
@@ -263,34 +267,36 @@ pub fn bind_key(key: Keyboard, action: Action) {
 /// }
 /// ```
 pub fn remove_any_key_bind() {
-    lock_registry().any_key_callback = None;
+    *registry().any_key_callback.lock().unwrap() = None;
 }
 
 /// Removes specific key bind.
 pub fn remove_key_bind(key: Keyboard) {
-    lock_registry().key_callbacks.remove(&key);
+    registry().key_callbacks.lock().unwrap().remove(&key);
 }
 
 /// Same as `bind_any_key` but for mouse buttons.
 pub fn bind_any_button(action: Action) {
-    lock_registry().any_button_callback = Some(Arc::new(action))
+    *registry().any_button_callback.lock().unwrap() = Some(Arc::new(action))
 }
 
 /// Same as `bind_key` but for mouse buttons.
 pub fn bind_button(button: Mouse, action: Action) {
-    lock_registry()
+    registry()
         .button_callbacks
+        .lock()
+        .unwrap()
         .insert(button, Arc::new(action));
 }
 
 /// Same as `remove_any_key_bind` but for mouse buttons.
 pub fn remove_any_button_bind() {
-    lock_registry().any_button_callback = None;
+    *registry().any_button_callback.lock().unwrap() = None;
 }
 
 /// Same as `remove_key_bind` but for mouse buttons.
 pub fn remove_button_bind(button: Mouse) {
-    lock_registry().button_callbacks.remove(&button);
+    registry().button_callbacks.lock().unwrap().remove(&button);
 }
 
 /// Allows for registering an action that will be triggered when sequence of buttons is pressed.
@@ -303,10 +309,10 @@ pub fn remove_button_bind(button: Mouse) {
 /// }
 /// ```
 pub fn register_hotkey(sequence: &[Keyboard], callback: impl Fn() + Clone + Send + Sync + 'static) {
-    lock_registry().register_hotkey(sequence, callback);
+    registry().register_hotkey(sequence, callback);
 }
 
 /// Unregisters hotkey, a original sequence has to be passed as parameter..
 pub fn unregister_hotkey(sequence: &[Keyboard]) {
-    lock_registry().unregister_hotkey(sequence);
+    registry().unregister_hotkey(sequence);
 }
