@@ -25,7 +25,8 @@ impl crate::Key for Keyboard {
     }
 
     fn is_toggled(&self) -> bool {
-        todo!()
+        println!("TODO: Linux is_toggled");
+        false
     }
 }
 
@@ -313,14 +314,14 @@ pub(crate) fn mouse_code_to_key(code: u32) -> Option<Mouse> {
 
 impl crate::Button for Mouse {
     fn press(&self) {
-        todo!()
+        println!("TODO: Linux press mouse");
     }
 
     fn click(&self) {
-        todo!()
+        println!("TODO: Linux mouse input");
     }
 
     fn release(&self) {
-        todo!()
+        println!("TODO: Linux mouse input");
     }
 }
