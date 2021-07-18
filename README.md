@@ -67,6 +67,29 @@ fn main() {
     thread::sleep(Duration::from_secs(100));
 }
 ```
+## Sample2: config file
+Library supports loading hotkey scripting using a yaml configuration file. check `using_config.rs`
+example to see more elaborate example. Below is a minimal one that speaks for itself.
+```
+---
+bind:
+  - description: Whenever Ctrl+L is clicked click K as well
+    key:
+      - LeftControl
+      - L
+    action:
+      click:
+        key:
+          - K
+```
+
+a Library provides a binary `mki` that can be used to load the script.
+
+## mki binary
+Library providers a mki binary that takes 1 argument a path to a .yaml file,
+the File will be parsed, it will print kind of hotkeys it registers and listen infinitely for the input.
+
+It is really a mini hotkey application.
 
 ## Threading model
 It is strongly advised to use a default `bind` which will spawn new thread for the bindings.  
