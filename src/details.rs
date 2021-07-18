@@ -160,7 +160,7 @@ impl Registry {
         }
         for callback in callbacks {
             // Should we not invoke actions if there is any hotkey present?
-            callback()
+            thread::spawn(move || callback());
         }
         let state = State::Pressed;
         let mut inhibit = InhibitEvent::No;
