@@ -1,5 +1,8 @@
-use crate::{Keyboard, Mouse};
+use crate::Button;
+use crate::{are_pressed, get_state, register_hotkey, set_state, Key, Keyboard, Mouse};
 use serde::{Deserialize, Serialize};
+use std::thread;
+use std::time::Duration;
 
 #[derive(Deserialize, Serialize)]
 struct Config {
@@ -8,6 +11,8 @@ struct Config {
 
 #[derive(Deserialize, Serialize)]
 struct Bind {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    description: Option<String>,
     #[serde(flatten)]
     input: Input,
 
@@ -23,6 +28,25 @@ struct Input {
 }
 
 impl Input {
+    fn validate(&self) -> Result<(), serde_yaml::Error> {
+        use serde::de::Error;
+        if self.key.is_none() && self.button.is_none() {
+            Err(serde_yaml::Error::custom("Bind had neither key nor button"))
+        } else if self.key.is_some() && self.button.is_some() {
+            Err(serde_yaml::Error::custom("Bind had both key and button"))
+        } else if let Some(keys) = self.key.as_ref() {
+            if keys.is_empty() {
+                Err(serde_yaml::Error::custom(
+                    "Bind had empty keys - mouse not supported atm",
+                ))
+            } else {
+                Ok(())
+            }
+        } else {
+            Ok(())
+        }
+    }
+    #[allow(unused)]
     fn key(key: Keyboard) -> Self {
         Input {
             button: None,
@@ -56,41 +80,145 @@ enum Action {
     Multi(Vec<Action>),
     Pressed(Pressed),
     StateMatches(StateMatches),
+    WhileStateMatches(StateMatches),
     Press(Input),
     Release(Input),
     Click(Input),
-    Sleep(i64), // Milliseconds
+    Sleep(u64), // Milliseconds
     SetState(SetState),
     Println(String),
     PrintState(String),
 }
 
+fn handle_actions(actions: &[Action]) {
+    for a in actions {
+        handle_action(a);
+    }
+}
+
+fn handle_action(action: &Action) {
+    // TODO: need to validate this!
+    match action {
+        Action::Multi(actions) => {
+            handle_actions(actions);
+        }
+        Action::Pressed(pressed) => {
+            let keys = pressed.input.key.as_ref().unwrap();
+            if are_pressed(&keys) {
+                handle_actions(&pressed.action);
+            }
+        }
+        Action::StateMatches(state_matches) => {
+            if let Some(state) = get_state(&state_matches.name) {
+                if state == state_matches.value {
+                    handle_actions(&state_matches.action);
+                }
+            }
+        }
+        Action::WhileStateMatches(state_matches) => {
+            while let Some(state) = get_state(&state_matches.name) {
+                if state == state_matches.value {
+                    handle_actions(&state_matches.action);
+                } else {
+                    break;
+                }
+            }
+        }
+        Action::Press(input) => {
+            if let Some(keys) = &input.key {
+                for k in keys {
+                    k.press();
+                }
+            }
+            if let Some(buttons) = &input.button {
+                for b in buttons {
+                    b.press();
+                }
+            }
+        }
+        Action::Release(input) => {
+            if let Some(keys) = &input.key {
+                for k in keys {
+                    k.release();
+                }
+            }
+            if let Some(buttons) = &input.button {
+                for b in buttons {
+                    b.release();
+                }
+            }
+        }
+        Action::Click(input) => {
+            if let Some(keys) = &input.key {
+                for k in keys {
+                    k.click()
+                }
+            }
+            if let Some(buttons) = &input.button {
+                for b in buttons {
+                    b.click()
+                }
+            }
+        }
+        Action::Sleep(millis) => {
+            thread::sleep(Duration::from_millis(*millis));
+        }
+        Action::SetState(state) => set_state(&state.name, &state.value),
+        Action::Println(message) => {
+            println!("{}", message);
+        }
+        Action::PrintState(state) => {
+            println!("State under key: {} is: {:?}", state, get_state(state))
+        }
+    }
+}
+
+pub fn load_config(content: &str) -> Result<(), serde_yaml::Error> {
+    let config: Config = serde_yaml::from_str(content)?;
+    for bind in config.bind {
+        bind.input.validate()?;
+        let keys = bind.input.key.unwrap();
+        println!("Now binding a hotkey for: {:?}", keys);
+        if let Some(description) = bind.description {
+            println!("description: {}", description);
+        }
+        let action = bind.action;
+        register_hotkey(&keys, move || {
+            handle_action(&action);
+        })
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::parse::{Action, Bind, Config, Input, Pressed, SetState, StateMatches};
-    use crate::Keyboard::{LeftControl, Number0, Number1, D, E, H, Q, R, S, W};
+    use crate::parse::{Action, Bind, Config, Input, SetState, StateMatches};
+    use crate::Keyboard::{LeftControl, Number0, Number1, D, E, H, K, L, R, S, W};
 
     #[test]
     fn example() {
         let c = Config {
             bind: vec![
                 Bind {
+                    description: Some(
+                        "LCtrl + H: [Loop until state is 1 [printing W, Sleep100]], then print E"
+                            .into(),
+                    ),
                     input: Input {
                         key: Some(vec![LeftControl, H]),
                         button: None,
                     },
                     action: Action::Multi(vec![
-                        Action::Pressed(Pressed {
-                            input: Input {
-                                key: Some(vec![Q]),
-                                button: None,
-                            },
-                            action: vec![Action::Click(Input::key(W)), Action::Sleep(10)],
+                        Action::WhileStateMatches(StateMatches {
+                            name: "test".into(),
+                            value: "1".into(),
+                            action: vec![Action::Click(Input::key(W)), Action::Sleep(100)],
                         }),
                         Action::Click(Input::key(E)),
                     ]),
                 },
                 Bind {
+                    description: Some("S: Set state to 1 then print it".into()),
                     input: Input::key(S),
                     action: Action::Multi(vec![
                         Action::SetState(SetState {
@@ -101,6 +229,7 @@ mod tests {
                     ]),
                 },
                 Bind {
+                    description: Some("R: Set state to 0 then print it".into()),
                     input: Input::key(R),
                     action: Action::Multi(vec![
                         Action::SetState(SetState {
@@ -111,6 +240,7 @@ mod tests {
                     ]),
                 },
                 Bind {
+                    description: Some("If state 1 then click 1; If state 0 then click 0".into()),
                     input: Input::key(D),
                     action: Action::Multi(vec![
                         Action::StateMatches(StateMatches {
@@ -130,24 +260,25 @@ mod tests {
         assert_eq!(
             r#"---
 bind:
-  - key:
+  - description: "LCtrl + H: [Loop until state is 1 [printing W, Sleep100]], then print E"
+    key:
       - LeftControl
       - H
     action:
       multi:
-        - pressed:
-            input:
-              key:
-                - Q
+        - while-state-matches:
+            name: test
+            value: "1"
             action:
               - click:
                   key:
                     - W
-              - sleep: 10
+              - sleep: 100
         - click:
             key:
               - E
-  - key:
+  - description: "S: Set state to 1 then print it"
+    key:
       - S
     action:
       multi:
@@ -155,7 +286,8 @@ bind:
             name: test
             value: "1"
         - print-state: test
-  - key:
+  - description: "R: Set state to 0 then print it"
+    key:
       - R
     action:
       multi:
@@ -163,7 +295,8 @@ bind:
             name: test
             value: "0"
         - print-state: test
-  - key:
+  - description: If state 1 then click 1; If state 0 then click 0
+    key:
       - D
     action:
       multi:
@@ -184,5 +317,33 @@ bind:
 "#,
             serde_yaml::to_string(&c).unwrap()
         )
+    }
+
+    #[test]
+    fn readme_example() {
+        let c = Config {
+            bind: vec![Bind {
+                description: Some("Whenever Ctrl+L is clicked click K as well".into()),
+                input: Input {
+                    key: Some(vec![LeftControl, L]),
+                    button: None,
+                },
+                action: Action::Click(Input::key(K)),
+            }],
+        };
+        assert_eq!(
+            r#"---
+bind:
+  - description: Whenever Ctrl+L is clicked click K as well
+    key:
+      - LeftControl
+      - L
+    action:
+      click:
+        key:
+          - K
+"#,
+            serde_yaml::to_string(&c).unwrap()
+        );
     }
 }

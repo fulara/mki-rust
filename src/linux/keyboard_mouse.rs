@@ -310,3 +310,17 @@ pub(crate) fn mouse_code_to_key(code: u32) -> Option<Mouse> {
 
     mapped
 }
+
+impl crate::Button for Mouse {
+    fn press(&self) {
+        todo!()
+    }
+
+    fn click(&self) {
+        todo!()
+    }
+
+    fn release(&self) {
+        todo!()
+    }
+}

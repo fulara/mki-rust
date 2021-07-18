@@ -13,6 +13,7 @@ pub use buttons::*;
 pub use keys::*;
 #[cfg(target_os = "linux")]
 pub use linux::*;
+pub use parse::load_config;
 pub use sequence::Sequence;
 #[cfg(target_os = "windows")]
 pub use windows::*;
@@ -336,6 +337,22 @@ pub fn remove_button_bind(button: Mouse) {
 /// ```
 pub fn register_hotkey(sequence: &[Keyboard], callback: impl Fn() + Send + Sync + 'static) {
     registry().register_hotkey(sequence, callback);
+}
+
+/// Returns whether given key sequence is currently pressed down, this may be a single key.
+pub fn are_pressed(sequence: &[Keyboard]) -> bool {
+    registry().are_pressed(sequence)
+}
+
+/// Allows storing some kind of state within the library,
+/// Generally not that useful but allows for some more complicated logic using yaml load.
+pub fn set_state(key: &str, value: &str) {
+    registry().set_state(key, value)
+}
+
+/// Returns the state, it has to be set beforehand with the set otherwise will be returned empty.
+pub fn get_state(key: &str) -> Option<String> {
+    registry().get_state(key)
 }
 
 /// Unregisters hotkey, a original sequence has to be passed as parameter..

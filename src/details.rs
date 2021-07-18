@@ -71,6 +71,8 @@ pub(crate) struct Registry {
 
     _handle: JoinHandle<()>,
     sequencer: Mutex<Option<Sequencer>>,
+
+    state: Mutex<HashMap<String, String>>,
 }
 
 impl Registry {
@@ -91,6 +93,7 @@ impl Registry {
             sequencer: Mutex::new(None),
             pressed: Mutex::new(Pressed::default()),
             hotkeys: Mutex::new(HashMap::new()),
+            state: Mutex::new(HashMap::new()),
         }
     }
 
@@ -199,6 +202,10 @@ impl Registry {
         self.pressed.lock().unwrap().is_pressed(event)
     }
 
+    pub(crate) fn are_pressed(&self, keys: &[Keyboard]) -> bool {
+        self.pressed.lock().unwrap().are_pressed(keys)
+    }
+
     pub(crate) fn register_hotkey(
         &self,
         sequence: &[Keyboard],
@@ -212,5 +219,14 @@ impl Registry {
 
     pub(crate) fn unregister_hotkey(&self, sequence: &[Keyboard]) {
         self.hotkeys.lock().unwrap().remove(&sequence.to_vec());
+    }
+
+    //noinspection ALL
+    pub fn set_state(&self, key: &str, value: &str) {
+        self.state.lock().unwrap().insert(key.into(), value.into());
+    }
+
+    pub fn get_state(&self, key: &str) -> Option<String> {
+        self.state.lock().unwrap().get(key).cloned()
     }
 }
