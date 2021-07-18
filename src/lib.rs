@@ -57,6 +57,11 @@ impl Keyboard {
         bind_key(*self, Action::handle_kb(handler))
     }
 
+    /// opposite to `bind`. Clears bind
+    pub fn clear_bind(&self) {
+        remove_key_bind(*self);
+    }
+
     /// Binds an action on this KeyboardKey, a version of `bind` that can do more.
     pub fn act_on(&self, action: Action) {
         bind_key(*self, action)
@@ -72,6 +77,11 @@ impl Mouse {
     /// Bind an action on this MouseButton, action will be invoked on a new thread.
     pub fn bind(&self, handler: impl Fn(Mouse) + Send + Sync + 'static) {
         bind_button(*self, Action::handle_mouse(handler))
+    }
+
+    /// opposite to `bind`. Clears bind
+    pub fn clear_bind(&self) {
+        remove_button_bind(*self);
     }
 
     /// Binds an action on this MouseButton, a version of `bind` that can do more.

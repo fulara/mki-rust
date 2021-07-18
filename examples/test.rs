@@ -23,7 +23,7 @@ fn main() {
         Q.click();
     });
 
-    MouseButton::Left.bind(|_| {
+    Mouse::Left.bind(|_| {
         println!("Left Mouse button pressed");
     });
 
@@ -32,7 +32,7 @@ fn main() {
         println!("Double Left Click Mouse");
     });
 
-    MouseButton::Right.bind(|_| {
+    Mouse::Right.bind(|_| {
         println!("Right Mouse button pressed");
     });
 
@@ -48,8 +48,15 @@ fn main() {
     register_hotkey(&[LeftControl, U], || println!("Ctrl+U pressed"));
 
     B.bind(|_| {
+        // Clearing bind for nicer output.
+        remove_any_key_bind();
+        R.clear_bind();
+        O.clear_bind();
+        S.clear_bind();
+        A.clear_bind();
+
         // So this seems awfully laggy on Linux, interesting. Is something wrong with impl?
-        Sequence::text("mini mini mini mini mini mini")
+        Sequence::text("\nWill now type...:\nmini. very, mini1\nHello World.\nAnswer is: 42")
             .unwrap()
             .send();
     });

@@ -1,4 +1,5 @@
 use crate::{Key, Keyboard};
+use std::str::FromStr;
 use std::thread;
 use std::time::Duration;
 
@@ -15,41 +16,10 @@ impl Sequence {
     pub fn text(text: &str) -> Option<Self> {
         let mut sequence = Vec::new();
         for char in text.chars() {
-            let lowercase = char.to_ascii_lowercase();
+            let uppercase = char.to_ascii_uppercase();
             use Keyboard::*;
-            let key = match lowercase {
-                ' ' => Space,
-                'a' => A,
-                'b' => B,
-                'c' => C,
-                'd' => D,
-                'e' => E,
-                'f' => F,
-                'g' => G,
-                'h' => H,
-                'i' => I,
-                'j' => J,
-                'k' => K,
-                'l' => L,
-                'm' => M,
-                'n' => N,
-                'o' => O,
-                'p' => P,
-                'q' => Q,
-                'r' => R,
-                's' => S,
-                't' => T,
-                'u' => U,
-                'v' => V,
-                'w' => W,
-                'x' => X,
-                'y' => Y,
-                'z' => Z,
-                _ => {
-                    return None;
-                }
-            };
-            if char.is_uppercase() {
+            let key = Keyboard::from_str(&uppercase.to_string()).ok()?;
+            if char.is_uppercase() || char == ':' || char == '\"' {
                 sequence.push(vec![LeftShift, key])
             } else {
                 sequence.push(vec![key])
