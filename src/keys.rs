@@ -60,6 +60,15 @@ pub enum Keyboard {
     Delete,
     LeftWindows,
     RightWindows,
+    Comma,         // ,<
+    Period,        // .>
+    Slash,         // /?
+    SemiColon,     // ;:
+    Apostrophe,    // '"
+    LeftBrace,     // [{
+    BackwardSlash, // \|
+    RightBrace,    // ]}
+    Grave,         // `~
     F1,
     F2,
     F3,
