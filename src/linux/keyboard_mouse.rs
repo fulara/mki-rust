@@ -173,6 +173,15 @@ pub fn key_to_event(key: Keyboard) -> Option<Key> {
         Subtract => None,
         Decimal => None,
         Divide => None,
+        Comma => Some(Key::Comma),
+        Period => Some(Key::Dot),
+        Slash => Some(Key::Slash),
+        SemiColon => Some(Key::SemiColon),
+        Apostrophe => Some(Key::Apostrophe),
+        LeftBrace => Some(Key::LeftBrace),
+        BackwardSlash => Some(Key::BackSlash),
+        RightBrace => Some(Key::RightBrace),
+        Grave => Some(Key::Grave),
     }
 }
 
@@ -270,6 +279,15 @@ pub(crate) fn kb_code_to_key(code: u32) -> Keyboard {
         code if Key::RightControl.code() == code => RightControl,
         code if Key::PageUp.code() == code => PageUp,
         code if Key::PageDown.code() == code => PageDown,
+        code if Key::Comma.code() == code => Comma,
+        code if Key::Dot.code() == code => Period,
+        code if Key::Slash.code() == code => Slash,
+        code if Key::SemiColon.code() == code => SemiColon,
+        code if Key::Apostrophe.code() == code => Apostrophe,
+        code if Key::LeftBrace.code() == code => LeftBrace,
+        code if Key::BackSlash.code() == code => BackwardSlash,
+        code if Key::RightBrace.code() == code => RightBrace,
+        code if Key::Grave.code() == code => Grave,
         code => Other(code),
         // Print, PrintScreen, LeftWin, RightWin, Add, Subtract, Multiply, Divide, Separator, Subtract
         // Decimal Divide

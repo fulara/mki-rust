@@ -9,9 +9,10 @@ use winapi::um::winuser::{
     VK_F18, VK_F19, VK_F2, VK_F20, VK_F21, VK_F22, VK_F23, VK_F24, VK_F3, VK_F4, VK_F5, VK_F6,
     VK_F7, VK_F8, VK_F9, VK_HOME, VK_INSERT, VK_LCONTROL, VK_LEFT, VK_LMENU, VK_LSHIFT, VK_LWIN,
     VK_MULTIPLY, VK_NEXT, VK_NUMLOCK, VK_NUMPAD0, VK_NUMPAD1, VK_NUMPAD2, VK_NUMPAD3, VK_NUMPAD4,
-    VK_NUMPAD5, VK_NUMPAD6, VK_NUMPAD7, VK_NUMPAD8, VK_NUMPAD9, VK_PRINT, VK_PRIOR, VK_RCONTROL,
-    VK_RETURN, VK_RIGHT, VK_RMENU, VK_RSHIFT, VK_RWIN, VK_SCROLL, VK_SEPARATOR, VK_SNAPSHOT,
-    VK_SPACE, VK_SUBTRACT, VK_TAB, VK_UP,
+    VK_NUMPAD5, VK_NUMPAD6, VK_NUMPAD7, VK_NUMPAD8, VK_NUMPAD9, VK_OEM_1, VK_OEM_2, VK_OEM_3,
+    VK_OEM_4, VK_OEM_5, VK_OEM_6, VK_OEM_7, VK_OEM_COMMA, VK_OEM_PERIOD, VK_PRINT, VK_PRIOR,
+    VK_RCONTROL, VK_RETURN, VK_RIGHT, VK_RMENU, VK_RSHIFT, VK_RWIN, VK_SCROLL, VK_SEPARATOR,
+    VK_SNAPSHOT, VK_SPACE, VK_SUBTRACT, VK_TAB, VK_UP,
 };
 
 impl Key for Keyboard {
@@ -207,6 +208,15 @@ fn vk_code(key: Keyboard) -> WORD {
         LeftAlt => VK_LMENU,
         RightAlt => VK_RMENU,
         Other(code) => code,
+        Comma => VK_OEM_COMMA,
+        Period => VK_OEM_PERIOD,
+        Slash => VK_OEM_2,
+        SemiColon => VK_OEM_1,
+        Grave => VK_OEM_3,
+        LeftBrace => VK_OEM_4,
+        BackwardSlash => VK_OEM_5,
+        RightBrace => VK_OEM_6,
+        Apostrophe => VK_OEM_7,
     };
     vk.try_into().expect("vk does not fit into WORD")
 }
@@ -318,6 +328,15 @@ impl From<i32> for Keyboard {
             VK_RCONTROL => RightControl,
             VK_LMENU => LeftAlt,
             VK_RMENU => RightAlt,
+            VK_OEM_PERIOD => Period,
+            VK_OEM_COMMA => Comma,
+            VK_OEM_1 => SemiColon,
+            VK_OEM_2 => Slash,
+            VK_OEM_3 => Grave,
+            VK_OEM_4 => LeftBrace,
+            VK_OEM_5 => BackwardSlash,
+            VK_OEM_6 => RightBrace,
+            VK_OEM_7 => Apostrophe,
             _ => Other(code),
         }
     }
