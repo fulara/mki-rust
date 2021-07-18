@@ -20,3 +20,5 @@ cargo install cross
 cross check --target x86_64-pc-windows-gnu
 
 ```
+# Support
+If you want to show appreciation for the stuff this repo gave you - you can do so via https://www.buymeacoffee.com/fulara
