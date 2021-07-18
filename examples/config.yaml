@@ -1,0 +1,12 @@
+# This is just a minimal example for the mki binary.
+# Usage would be: cargo run --bin mki examples/config.yaml
+---
+bind:
+  - description: Whenever Ctrl+L is clicked click K as well
+    key:
+      - LeftControl
+      - L
+    action:
+      click:
+        key:
+          - K
