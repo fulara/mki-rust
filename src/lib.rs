@@ -260,7 +260,7 @@ impl Action {
 /// ```
 /// use mki::*;
 ///
-/// fn main() {
+/// fn install_global_handler() {
 ///   bind_any_key(Action::handle_kb(|(key)| println!("Some key pressed: {:?}", key)));
 /// }
 /// ```
@@ -272,7 +272,7 @@ pub fn bind_any_key(action: Action) {
 ///```
 /// use mki::*;
 ///
-/// fn main() {
+/// fn bind_some_key() {
 ///   bind_key(Keyboard::B, Action::handle_kb(|(key)| println!("B Pressed")));
 /// }
 /// ```
@@ -288,7 +288,7 @@ pub fn bind_key(key: Keyboard, action: Action) {
 ///```
 /// use mki::*;
 ///
-/// fn main() {
+/// fn remove_global_handler() {
 ///   bind_any_key(Action::handle_kb(|(key)| println!("Some key pressed: {:?}", key)));
 ///   remove_any_key_bind();
 /// }
@@ -331,7 +331,7 @@ pub fn remove_button_bind(button: Mouse) {
 /// ```
 /// use mki::*;
 ///
-/// fn main() {
+/// fn register() {
 ///   register_hotkey(&[Keyboard::LeftControl, Keyboard::B], || println!("CTRL+B pressed"));
 /// }
 /// ```

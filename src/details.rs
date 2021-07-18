@@ -65,6 +65,7 @@ pub(crate) struct Registry {
     pub(crate) button_callbacks: Mutex<HashMap<Mouse, Arc<Action>>>,
     pub(crate) any_key_callback: Mutex<Option<Arc<Action>>>,
     pub(crate) any_button_callback: Mutex<Option<Arc<Action>>>,
+    #[allow(clippy::type_complexity)]
     pub(crate) hotkeys: Mutex<HashMap<Vec<Keyboard>, Arc<Box<dyn Fn() + Send + Sync + 'static>>>>,
 
     pressed: Mutex<Pressed>,
@@ -151,10 +152,10 @@ impl Registry {
         let mut callbacks = Vec::new();
         if let Event::Keyboard(key) = event {
             for (sequence, callback) in self.hotkeys.lock().unwrap().iter() {
-                if sequence.last() == Some(&key) {
-                    if self.pressed.lock().unwrap().are_pressed(&sequence) {
-                        callbacks.push(callback.clone());
-                    }
+                if sequence.last() == Some(&key)
+                    && self.pressed.lock().unwrap().are_pressed(&sequence)
+                {
+                    callbacks.push(callback.clone());
                 }
             }
         }

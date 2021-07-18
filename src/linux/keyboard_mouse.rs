@@ -297,7 +297,7 @@ pub(crate) fn kb_code_to_key(code: u32) -> Keyboard {
 
 pub(crate) fn mouse_code_to_key(code: u32) -> Option<Mouse> {
     use uinput::event::controller::Mouse as IMouse;
-    let mapped = Some(match code as i32 {
+    Some(match code as i32 {
         code if IMouse::Left.code() == code => Mouse::Left,
         code if IMouse::Right.code() == code => Mouse::Right,
         code if IMouse::Middle.code() == code => Mouse::Middle,
@@ -307,9 +307,7 @@ pub(crate) fn mouse_code_to_key(code: u32) -> Option<Mouse> {
         code if IMouse::Back.code() == code => Mouse::Back,
         code if IMouse::Task.code() == code => Mouse::Task,
         _ => return None,
-    });
-
-    mapped
+    })
 }
 
 impl crate::Button for Mouse {
