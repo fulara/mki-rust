@@ -127,5 +127,10 @@ cross check --target x86_64-pc-windows-gnu
 * Check for is toggled on linux.
 * Should `are_pressed` support Mouse? for now the `Pressed` in config ignores mouse.
 
+0.2 release will have:
+Mouse to support location.
+Mouse to support live tracking callback
+Mouse to support sending key strokes at given coordinates.
+
 # Support
 If you want to show appreciation for the stuff this repo gave you - you can do so via https://www.buymeacoffee.com/fulara
