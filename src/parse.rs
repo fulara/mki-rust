@@ -1,5 +1,6 @@
 use crate::Button;
 use crate::{are_pressed, get_state, register_hotkey, set_state, Key, Keyboard, Mouse};
+use serde::de::Error;
 use serde::{Deserialize, Serialize};
 use std::thread;
 use std::time::Duration;
@@ -29,7 +30,6 @@ struct Input {
 
 impl Input {
     fn validate(&self) -> Result<(), serde_yaml::Error> {
-        use serde::de::Error;
         if self.key.is_none() && self.button.is_none() {
             Err(serde_yaml::Error::custom("Bind had neither key nor button"))
         } else if self.key.is_some() && self.button.is_some() {
@@ -108,6 +108,9 @@ fn validate_action(action: &Action) -> serde_yaml::Result<()> {
         }
         Action::Pressed(pressed) => {
             pressed.input.validate()?;
+            if pressed.input.key.is_none() {
+                return Err(serde_yaml::Error::custom("Pressed can only check keys."));
+            }
             validate_actions(&pressed.action)?;
         }
         Action::StateMatches(state_matches) => {

@@ -123,10 +123,9 @@ cross check --target x86_64-pc-windows-gnu
 
 ```
 #### TODOs:
-Simulate Linux mouse input - this requires different library - probably x11.
-Check for is toggled on linux.
-Validate config before registering the config.
-Add support to mouse keys on config aproach - now its just pretends its there.
+* Simulate Linux mouse input - this requires different library - probably x11.
+* Check for is toggled on linux.
+* Should `are_pressed` support Mouse? for now the `Pressed` in config ignores mouse.
 
 # Support
 If you want to show appreciation for the stuff this repo gave you - you can do so via https://www.buymeacoffee.com/fulara
