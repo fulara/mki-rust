@@ -1,4 +1,6 @@
-#[derive(Copy, Clone, Ord, PartialOrd, Hash, Eq, PartialEq, Debug)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Copy, Clone, Ord, PartialOrd, Hash, Eq, PartialEq, Debug, Serialize, Deserialize)]
 pub enum Mouse {
     // TODO: double clicks.
     Left,

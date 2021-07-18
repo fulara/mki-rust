@@ -4,6 +4,7 @@ mod buttons;
 mod keys;
 #[cfg(target_os = "linux")]
 mod linux;
+mod parse;
 mod sequence;
 #[cfg(target_os = "windows")]
 mod windows;

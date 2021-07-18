@@ -1,6 +1,7 @@
+use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 
-#[derive(Copy, Clone, Ord, PartialOrd, Hash, Eq, PartialEq, Debug)]
+#[derive(Copy, Clone, Ord, PartialOrd, Hash, Eq, PartialEq, Debug, Serialize, Deserialize)]
 pub enum Keyboard {
     A,
     B,
