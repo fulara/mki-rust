@@ -6,8 +6,7 @@ use std::time::Duration;
 
 fn main() -> Result<(), serde_yaml::Error> {
     let cfg = std::env::args()
-        .skip(1)
-        .next()
+        .nth(1)
         .expect("Expects 1 argument - path to config file");
     let mut file = File::open(cfg).expect("Failed to open cfg file");
     let mut content = String::new();

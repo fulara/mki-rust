@@ -25,7 +25,7 @@ impl Sequence {
                 sequence.push(vec![key])
             }
         }
-        return Some(Sequence { sequence });
+        Some(Sequence { sequence })
     }
 
     /// send this Sequence on new thread.
