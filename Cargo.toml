@@ -8,6 +8,7 @@ readme = "README.md"
 homepage = "https://github.com/fulara/mki-rs"
 repository = "https://github.com/fulara/mki-rs"
 categories = ["api-bindings"]
+documentation = "https://docs.rs/mki-rs"
 license = "MIT"
 edition = "2018"
 
