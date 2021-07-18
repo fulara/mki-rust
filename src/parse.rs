@@ -36,9 +36,13 @@ impl Input {
             Err(serde_yaml::Error::custom("Bind had both key and button"))
         } else if let Some(keys) = self.key.as_ref() {
             if keys.is_empty() {
-                Err(serde_yaml::Error::custom(
-                    "Bind had empty keys - mouse not supported atm",
-                ))
+                Err(serde_yaml::Error::custom("Bind had empty keys"))
+            } else {
+                Ok(())
+            }
+        } else if let Some(buttons) = self.button.as_ref() {
+            if buttons.is_empty() {
+                Err(serde_yaml::Error::custom("Bind had empty buttons"))
             } else {
                 Ok(())
             }
@@ -90,6 +94,40 @@ enum Action {
     PrintState(String),
 }
 
+fn validate_actions(actions: &[Action]) -> serde_yaml::Result<()> {
+    for a in actions {
+        validate_action(a)?;
+    }
+    Ok(())
+}
+
+fn validate_action(action: &Action) -> serde_yaml::Result<()> {
+    match action {
+        Action::Multi(actions) => {
+            validate_actions(actions)?;
+        }
+        Action::Pressed(pressed) => {
+            pressed.input.validate()?;
+            validate_actions(&pressed.action)?;
+        }
+        Action::StateMatches(state_matches) => {
+            validate_actions(&state_matches.action)?;
+        }
+        Action::WhileStateMatches(state_matches) => {
+            validate_actions(&state_matches.action)?;
+        }
+        Action::Press(_)
+        | Action::Release(_)
+        | Action::Click(_)
+        | Action::Sleep(_)
+        | Action::SetState(_)
+        | Action::Println(_)
+        | Action::PrintState(_) => {}
+    }
+
+    Ok(())
+}
+
 fn handle_actions(actions: &[Action]) {
     for a in actions {
         handle_action(a);
@@ -97,7 +135,6 @@ fn handle_actions(actions: &[Action]) {
 }
 
 fn handle_action(action: &Action) {
-    // TODO: need to validate this!
     match action {
         Action::Multi(actions) => {
             handle_actions(actions);
@@ -183,6 +220,7 @@ pub fn load_config(content: &str) -> Result<(), serde_yaml::Error> {
             println!("description: {}", description);
         }
         let action = bind.action;
+        validate_action(&action)?;
         register_hotkey(&keys, move || {
             handle_action(&action);
         })
