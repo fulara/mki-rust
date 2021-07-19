@@ -1,18 +1,18 @@
 pub(crate) mod details;
 
-mod buttons;
-mod keys;
+mod keyboard;
 #[cfg(target_os = "linux")]
 mod linux;
+mod mouse;
 mod parse;
 mod sequence;
 #[cfg(target_os = "windows")]
 mod windows;
 
-pub use buttons::*;
-pub use keys::*;
+pub use keyboard::*;
 #[cfg(target_os = "linux")]
 pub use linux::*;
+pub use mouse::*;
 pub use parse::load_config;
 pub use sequence::Sequence;
 #[cfg(target_os = "windows")]
