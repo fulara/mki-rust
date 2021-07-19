@@ -1,6 +1,7 @@
 use crate::{install_hooks, process_message, Action, Event, Mouse, State};
 use crate::{InhibitEvent, Keyboard};
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 use std::thread::JoinHandle;
@@ -67,6 +68,7 @@ pub(crate) struct Registry {
     pub(crate) any_button_callback: Mutex<Option<Arc<Action>>>,
     #[allow(clippy::type_complexity)]
     pub(crate) hotkeys: Mutex<HashMap<Vec<Keyboard>, Arc<Box<dyn Fn() + Send + Sync + 'static>>>>,
+    mouse_tracking_callback: Mutex<Option<Arc<Action>>>,
 
     pressed: Mutex<Pressed>,
 
@@ -74,6 +76,8 @@ pub(crate) struct Registry {
     sequencer: Mutex<Option<Sequencer>>,
 
     state: Mutex<HashMap<String, String>>,
+
+    pub(crate) tracking_enabled: AtomicBool,
 }
 
 impl Registry {
@@ -95,6 +99,8 @@ impl Registry {
             pressed: Mutex::new(Pressed::default()),
             hotkeys: Mutex::new(HashMap::new()),
             state: Mutex::new(HashMap::new()),
+            tracking_enabled: AtomicBool::new(false),
+            mouse_tracking_callback: Mutex::new(None),
         }
     }
 
@@ -229,5 +235,25 @@ impl Registry {
 
     pub fn get_state(&self, key: &str) -> Option<String> {
         self.state.lock().unwrap().get(key).cloned()
+    }
+
+    pub fn is_tracking_enabled(&self) -> bool {
+        self.tracking_enabled.load(Ordering::Relaxed)
+    }
+
+    pub fn set_mouse_tracker(&self, action: Option<Action>) {
+        self.tracking_enabled
+            .store(action.is_some(), Ordering::Relaxed);
+        *self.mouse_tracking_callback.lock().unwrap() = action.map(Arc::new);
+    }
+
+    #[allow(unused)]
+    pub(crate) fn update_mouse_position(&self, x: u32, y: u32) {
+        if self.is_tracking_enabled() {
+            if let Some(mouse_tracking) = self.mouse_tracking_callback.lock().unwrap().as_ref() {
+                // TODO: Looks like move does not belong in mouse after all .. ?
+                (mouse_tracking.callback)(Event::Mouse(Mouse::Move(x, y)), State::Pressed)
+            }
+        }
     }
 }

@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Copy, Clone, Ord, PartialOrd, Hash, Eq, PartialEq, Debug, Serialize, Deserialize)]
 pub enum Mouse {
+    Move(u32, u32),
     // TODO: double clicks.
     Left,
     #[cfg(target_os = "windows")] // Not sure how to detect double on linux

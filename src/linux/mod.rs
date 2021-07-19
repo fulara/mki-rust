@@ -5,7 +5,7 @@ use crate::keyboard_mouse::{kb_code_to_key, mouse_code_to_key};
 use crate::Event;
 use input::event::keyboard::{KeyState, KeyboardEventTrait};
 use input::event::pointer::ButtonState;
-use input::event::pointer::PointerEvent::Button;
+use input::event::pointer::PointerEvent::{Button, Motion};
 use input::{Libinput, LibinputInterface};
 use nix::fcntl::{open, OFlag};
 use nix::poll::{poll, PollFd, PollFlags};
@@ -60,7 +60,11 @@ fn handle_libinput_event(event: input::Event) {
             }
         }
         input::Event::Pointer(pointer) => {
-            if let Button(button_event) = pointer {
+            if let Motion(_motion_event) = &pointer {
+                // TODO: Is it possible to get here current absolute positions per screen?
+                // registry().update_mouse_position(motion_event.dx(), motion_event.dy());
+            }
+            if let Button(button_event) = &pointer {
                 if let Some(mapped) = mouse_code_to_key(button_event.button()) {
                     match button_event.button_state() {
                         ButtonState::Pressed => {
