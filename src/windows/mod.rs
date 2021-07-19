@@ -91,9 +91,9 @@ unsafe extern "system" fn mouse_hook(
     //   ULONG_PTR dwExtraInfo;
     // } MSLLHOOKSTRUCT, *LPMSLLHOOKSTRUCT, *PMSLLHOOKSTRUCT;
     let data = &*(l_param as *const MSLLHOOKSTRUCT);
-    let maybe_x_button = if data.mouseData == XBUTTON1.into() {
+    let maybe_x_button = if data.mouseData == u32::from(XBUTTON1) {
         Some(Mouse::Side)
-    } else if data.mouseData == XBUTTON2.into() {
+    } else if data.mouseData == u32::from(XBUTTON2) {
         Some(Mouse::Extra)
     } else {
         None
