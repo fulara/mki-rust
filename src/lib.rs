@@ -110,11 +110,11 @@ impl InhibitEvent {
     #[cfg(target_os = "windows")]
     fn should_inhibit(&self) -> bool {
         match self {
-            InhibitEvent::Yes => false,
+            InhibitEvent::Yes => true,
             InhibitEvent::Maybe(f) => {
-                matches!(f(), InhibitEvent::No)
+                matches!(f(), InhibitEvent::Yes)
             }
-            InhibitEvent::No => true,
+            InhibitEvent::No => false,
         }
     }
 
