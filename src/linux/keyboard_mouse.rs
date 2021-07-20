@@ -2,9 +2,7 @@ use crate::{Keyboard, Mouse};
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::time::Duration;
 use uinput::event::keyboard::Key;
-use uinput::event::relative::Position;
 use uinput::event::Code;
-
 enum KeybdAction {
     Press,
     Release,
@@ -45,23 +43,24 @@ fn send_key_stroke(action: KeybdAction, key: Keyboard) {
 fn device() -> MutexGuard<'static, uinput::Device> {
     lazy_static::lazy_static! {
         static ref DEVICE: Arc<Mutex<uinput::Device>> = {
-            let device = Arc::new(Mutex::new(
+            let mut device =
                 uinput::default()
                 .unwrap()
                 .name("mki")
                 .unwrap()
                 .event(uinput::event::Keyboard::All)
-                .unwrap()
-                .event(Position::X)
-                .unwrap()
-                .event(Position::Y)
-                .unwrap()
-                .create()
-                .unwrap()));
+                .unwrap();
+            for v in uinput::event::controller::Mouse::iter_variants() {
+                device = device.event(v).unwrap();
+            }
+            // This does not seem to work.
+            // device = device.event(Event::Absolute(Absolute::Position(Position::X))).unwrap().min(0).max(100);
+            // device = device.event(Event::Absolute(Absolute::Position(Position::Y))).unwrap().min(0).max(100);
+            let mut device = device.create().unwrap();
             // Without this there seems to be some inputs gone to hell
-            device.lock().unwrap().synchronize().unwrap();
+            device.synchronize().unwrap();
             std::thread::sleep(Duration::from_millis(100));
-            device
+            Arc::new(Mutex::new(device))
         };
     }
     DEVICE.lock().unwrap()
