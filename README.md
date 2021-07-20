@@ -1,4 +1,4 @@
-# mki - mouse-keyboard-input 
+# mki - mouse-keyboard-input [![crates.io version](https://img.shields.io/crates/v/mki.svg)](https://crates.io/crates/mki)
 Windows & Linux library for registring global input hooks and simulating keyboard and mouse events.
 
 ## Features:
