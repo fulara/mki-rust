@@ -360,7 +360,7 @@ pub fn unregister_hotkey(sequence: &[Keyboard]) {
     registry().unregister_hotkey(sequence);
 }
 
-pub fn set_mouse_tracker(f: impl Fn(u32, u32) + Send + Sync + 'static) {
+pub fn set_mouse_tracker(f: impl Fn(i32, i32) + Send + Sync + 'static) {
     registry().set_mouse_tracker(Some(Action::handle_mouse(move |event| {
         if let Mouse::Move(x, y) = event {
             f(x, y)

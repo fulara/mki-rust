@@ -248,7 +248,7 @@ impl Registry {
     }
 
     #[allow(unused)]
-    pub(crate) fn update_mouse_position(&self, x: u32, y: u32) {
+    pub(crate) fn update_mouse_position(&self, x: i32, y: i32) {
         if self.is_tracking_enabled() {
             if let Some(mouse_tracking) = self.mouse_tracking_callback.lock().unwrap().as_ref() {
                 // TODO: Looks like move does not belong in mouse after all .. ?

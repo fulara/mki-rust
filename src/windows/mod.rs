@@ -128,7 +128,10 @@ unsafe extern "system" fn mouse_hook(
         code if code == WM_MBUTTONUP => registry().event_up(Event::Mouse(Mouse::Middle)),
         code if code == WM_XBUTTONUP => registry().event_up(Event::Mouse(maybe_x_button.unwrap())),
         code if code == WM_XBUTTONUP => registry().event_up(Event::Mouse(maybe_x_button.unwrap())),
-        _ => InhibitEvent::No,
+        _ => {
+            registry().update_mouse_position(data.pt.x, data.pt.y);
+            InhibitEvent::No
+        }
     };
     if inhibit.should_inhibit() {
         1
