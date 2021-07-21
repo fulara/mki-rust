@@ -1,6 +1,7 @@
-// pub mod hotkey;
 pub mod keyboard;
 pub mod mouse;
+
+pub use mouse::move_mouse_impl;
 
 use crate::details::registry;
 use crate::{Event, InhibitEvent, Keyboard, Mouse};

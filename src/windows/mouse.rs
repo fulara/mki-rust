@@ -86,7 +86,6 @@ fn button_to_event_up(button: Mouse) -> u32 {
         Right | DoubleRight => MOUSEEVENTF_RIGHTDOWN,
         Middle | DoubleMiddle => MOUSEEVENTF_MIDDLEDOWN,
         Side | DoubleSide | Extra | DoubleExtra => MOUSEEVENTF_XDOWN,
-        Move(_, _) => 0,
     }
 }
 
@@ -97,7 +96,6 @@ fn button_to_event_down(button: Mouse) -> u32 {
         Right | DoubleRight => MOUSEEVENTF_RIGHTUP,
         Middle | DoubleMiddle => MOUSEEVENTF_MIDDLEUP,
         Side | DoubleSide | Extra | DoubleExtra => MOUSEEVENTF_XUP,
-        Move(_, _) => 0,
     }
 }
 
@@ -108,6 +106,9 @@ fn mouse_to_pos(button: Mouse) -> Option<Pos> {
         Right | DoubleRight => None,
         Middle | DoubleMiddle => None,
         Side | DoubleSide | Extra | DoubleExtra => None,
-        Move(x, y) => Some(Pos { x, y }),
     }
+}
+
+pub fn move_mouse_impl(x: i32, y: i32) {
+    mouse_interact_with(0, 0, Some(Pos { x, y }));
 }

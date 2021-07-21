@@ -97,6 +97,11 @@ impl Mouse {
     }
 }
 
+#[cfg(target_os = "windows")]
+pub fn move_mouse(x: i32, y: i32) {
+    move_mouse_impl(x, y);
+}
+
 #[derive(Clone)]
 /// Works only on windows.
 /// Whether to propagate the event for applications down the callstack.
@@ -361,9 +366,5 @@ pub fn unregister_hotkey(sequence: &[Keyboard]) {
 }
 
 pub fn set_mouse_tracker(f: impl Fn(i32, i32) + Send + Sync + 'static) {
-    registry().set_mouse_tracker(Some(Action::handle_mouse(move |event| {
-        if let Mouse::Move(x, y) = event {
-            f(x, y)
-        };
-    })));
+    registry().set_mouse_tracker(Some(Arc::new(Box::new(f))));
 }

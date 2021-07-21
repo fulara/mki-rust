@@ -68,7 +68,8 @@ pub(crate) struct Registry {
     pub(crate) any_button_callback: Mutex<Option<Arc<Action>>>,
     #[allow(clippy::type_complexity)]
     pub(crate) hotkeys: Mutex<HashMap<Vec<Keyboard>, Arc<Box<dyn Fn() + Send + Sync + 'static>>>>,
-    mouse_tracking_callback: Mutex<Option<Arc<Action>>>,
+    #[allow(clippy::type_complexity)]
+    mouse_tracking_callback: Mutex<Option<Arc<Box<dyn Fn(i32, i32) + Send + Sync + 'static>>>>,
 
     pressed: Mutex<Pressed>,
 
@@ -241,18 +242,21 @@ impl Registry {
         self.tracking_enabled.load(Ordering::Relaxed)
     }
 
-    pub fn set_mouse_tracker(&self, action: Option<Action>) {
+    #[allow(clippy::type_complexity)]
+    pub fn set_mouse_tracker(
+        &self,
+        action: Option<Arc<Box<dyn Fn(i32, i32) + Send + Sync + 'static>>>,
+    ) {
         self.tracking_enabled
             .store(action.is_some(), Ordering::Relaxed);
-        *self.mouse_tracking_callback.lock().unwrap() = action.map(Arc::new);
+        *self.mouse_tracking_callback.lock().unwrap() = action;
     }
 
     #[allow(unused)]
     pub(crate) fn update_mouse_position(&self, x: i32, y: i32) {
         if self.is_tracking_enabled() {
             if let Some(mouse_tracking) = self.mouse_tracking_callback.lock().unwrap().as_ref() {
-                // TODO: Looks like move does not belong in mouse after all .. ?
-                (mouse_tracking.callback)(Event::Mouse(Mouse::Move(x, y)), State::Pressed)
+                mouse_tracking(x, y)
             }
         }
     }
