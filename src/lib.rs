@@ -9,6 +9,10 @@ mod sequence;
 #[cfg(target_os = "windows")]
 mod windows;
 
+#[cfg(target_os = "linux")]
+use crate::linux::keyboard_mouse::kimpl;
+#[cfg(target_os = "windows")]
+use crate::windows::keyboard::kimpl;
 pub use keyboard::*;
 #[cfg(target_os = "linux")]
 pub use linux::*;
@@ -39,21 +43,27 @@ pub trait Button {
     fn release(&self);
 }
 
-// Keyboard implements.
-pub trait Key {
+impl Keyboard {
     /// Send an event to Press this key
-    fn press(&self);
+    pub fn press(&self) {
+        kimpl::press(*self)
+    }
+
     /// Send an event to Release this key
-    fn release(&self);
+    pub fn release(&self) {
+        kimpl::release(*self)
+    }
     /// Send an event to Click (Press + Release) this key
-    fn click(&self);
+    pub fn click(&self) {
+        kimpl::click(*self);
+    }
 
     // Some buttons are toggleable like caps lock.
     /// Whether this KeyboardKey is toggled, applies for some buttons such as Caps Lock
-    fn is_toggled(&self) -> bool;
-}
+    pub fn is_toggled(&self) -> bool {
+        kimpl::is_toggled(*self)
+    }
 
-impl Keyboard {
     /// Bind an action on this KeyboardKey, action will be invoked on a new thread.
     pub fn bind(&self, handler: impl Fn(Keyboard) + Send + Sync + 'static) {
         bind_key(*self, Action::handle_kb(handler))

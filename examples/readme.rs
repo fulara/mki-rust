@@ -1,4 +1,4 @@
-use mki::{bind_key, Action, InhibitEvent, Key, Keyboard, Sequence};
+use mki::{bind_key, Action, InhibitEvent, Keyboard, Sequence};
 use std::thread;
 use std::time::Duration;
 

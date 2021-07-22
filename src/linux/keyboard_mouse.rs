@@ -9,20 +9,23 @@ enum KeybdAction {
     Click,
 }
 
-impl crate::Key for Keyboard {
-    fn press(&self) {
-        send_key_stroke(KeybdAction::Press, *self);
+pub(crate) mod kimpl {
+    use crate::keyboard_mouse::{send_key_stroke, KeybdAction};
+    use crate::Keyboard;
+
+    pub(crate) fn press(key: Keyboard) {
+        send_key_stroke(KeybdAction::Press, key)
     }
 
-    fn release(&self) {
-        send_key_stroke(KeybdAction::Release, *self);
+    pub(crate) fn release(key: Keyboard) {
+        send_key_stroke(KeybdAction::Release, key)
     }
 
-    fn click(&self) {
-        send_key_stroke(KeybdAction::Click, *self);
+    pub(crate) fn click(key: Keyboard) {
+        send_key_stroke(KeybdAction::Click, key)
     }
 
-    fn is_toggled(&self) -> bool {
+    pub(crate) fn is_toggled(_key: Keyboard) -> bool {
         println!("TODO: Linux is_toggled");
         false
     }

@@ -1,4 +1,4 @@
-use crate::{Key, Keyboard};
+use crate::Keyboard;
 use std::str::FromStr;
 use std::thread;
 use std::time::Duration;

@@ -11,7 +11,7 @@ Windows & Linux library for registring global input hooks and simulating keyboar
 Check examples/readme.rs for the example. Can be run with `cargo run --example readme`.
 
 ```rust
-use mki::{bind_key, Action, InhibitEvent, Key, Keyboard, Sequence};
+use mki::{bind_key, Action, InhibitEvent, Keyboard, Sequence};
 use std::thread;
 use std::time::Duration;
 

@@ -1,9 +1,9 @@
-use crate::{Key, Keyboard};
+use crate::Keyboard;
 use std::convert::TryInto;
 use std::mem::{size_of, transmute_copy};
 use winapi::shared::minwindef::WORD;
 use winapi::um::winuser::{
-    GetKeyState, MapVirtualKeyW, SendInput, INPUT, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP,
+    MapVirtualKeyW, SendInput, INPUT, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP,
     KEYEVENTF_SCANCODE, LPINPUT, VK_ADD, VK_BACK, VK_CAPITAL, VK_DECIMAL, VK_DELETE, VK_DIVIDE,
     VK_DOWN, VK_ESCAPE, VK_F1, VK_F10, VK_F11, VK_F12, VK_F13, VK_F14, VK_F15, VK_F16, VK_F17,
     VK_F18, VK_F19, VK_F2, VK_F20, VK_F21, VK_F22, VK_F23, VK_F24, VK_F3, VK_F4, VK_F5, VK_F6,
@@ -15,25 +15,29 @@ use winapi::um::winuser::{
     VK_SNAPSHOT, VK_SPACE, VK_SUBTRACT, VK_TAB, VK_UP,
 };
 
-impl Key for Keyboard {
-    fn press(&self) {
-        send_key_stroke(true, *self)
+pub(crate) mod kimpl {
+    use crate::windows::keyboard::{send_key_stroke, vk_code};
+    use crate::Keyboard;
+    use winapi::um::winuser::GetKeyState;
+
+    pub(crate) fn press(key: Keyboard) {
+        send_key_stroke(true, key)
     }
 
-    fn release(&self) {
-        send_key_stroke(false, *self)
+    pub(crate) fn release(key: Keyboard) {
+        send_key_stroke(false, key)
     }
 
-    fn click(&self) {
+    pub(crate) fn click(key: Keyboard) {
         // Do we need sleep in between?
-        self.press();
-        self.release();
+        press(key);
+        release(key);
     }
 
-    fn is_toggled(&self) -> bool {
+    pub(crate) fn is_toggled(key: Keyboard) -> bool {
         // GetAsync is universal, but does not provide whether button is toggled.
         // as the GetKeyState seems to guarantee the correctness.
-        let state = unsafe { GetKeyState(vk_code(*self).into()) };
+        let state = unsafe { GetKeyState(vk_code(key).into()) };
         i32::from(state) & 0x8001 != 0
     }
 }
