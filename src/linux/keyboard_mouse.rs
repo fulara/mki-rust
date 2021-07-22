@@ -312,16 +312,18 @@ pub(crate) fn mouse_code_to_key(code: u32) -> Option<Mouse> {
     })
 }
 
-impl crate::Button for Mouse {
-    fn press(&self) {
+pub(crate) mod mimpl {
+    use crate::Mouse;
+
+    pub(crate) fn press(_button: Mouse) {
         println!("TODO: Linux press mouse");
     }
 
-    fn click(&self) {
+    pub(crate) fn click(_button: Mouse) {
         println!("TODO: Linux mouse input");
     }
 
-    fn release(&self) {
+    pub(crate) fn release(_button: Mouse) {
         println!("TODO: Linux mouse input");
     }
 }

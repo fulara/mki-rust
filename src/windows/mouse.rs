@@ -1,4 +1,4 @@
-use crate::{Button, Mouse};
+use crate::Mouse;
 use std::mem::{size_of, transmute_copy};
 use winapi::um::winuser::{
     SendInput, INPUT, INPUT_MOUSE, LPINPUT, MOUSEEVENTF_ABSOLUTE, MOUSEEVENTF_LEFTDOWN,
@@ -6,17 +6,20 @@ use winapi::um::winuser::{
     MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_XDOWN, MOUSEEVENTF_XUP, MOUSEINPUT, XBUTTON1, XBUTTON2,
 };
 
-impl Button for Mouse {
-    fn press(&self) {
-        mouse_press(*self)
+pub(crate) mod mimpl {
+    use crate::windows::mouse::{mouse_click, mouse_press, mouse_release};
+    use crate::Mouse;
+
+    pub(crate) fn press(button: Mouse) {
+        mouse_press(button)
     }
 
-    fn click(&self) {
-        mouse_click(*self);
+    pub(crate) fn click(button: Mouse) {
+        mouse_click(button);
     }
 
-    fn release(&self) {
-        mouse_release(*self);
+    pub(crate) fn release(button: Mouse) {
+        mouse_release(button);
     }
 }
 

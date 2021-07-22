@@ -11,8 +11,12 @@ mod windows;
 
 #[cfg(target_os = "linux")]
 use crate::linux::keyboard_mouse::kimpl;
+#[cfg(target_os = "linux")]
+use crate::linux::keyboard_mouse::mimpl;
 #[cfg(target_os = "windows")]
 use crate::windows::keyboard::kimpl;
+#[cfg(target_os = "windows")]
+use crate::windows::mouse::mimpl;
 pub use keyboard::*;
 #[cfg(target_os = "linux")]
 pub use linux::*;
@@ -31,16 +35,6 @@ use std::sync::Arc;
 pub enum State {
     Pressed,
     Released,
-}
-
-// Mouse implements.
-pub trait Button {
-    /// Send an event to Press this Button
-    fn press(&self);
-    /// Send an event to Release this Button
-    fn click(&self);
-    /// Send an event to Click (Press + Release) this key
-    fn release(&self);
 }
 
 impl Keyboard {
@@ -86,6 +80,21 @@ impl Keyboard {
 }
 
 impl Mouse {
+    /// Send an event to Press this Button
+    fn press(&self) {
+        mimpl::press(*self)
+    }
+
+    /// Send an event to Release this Button
+    fn click(&self) {
+        mimpl::click(*self)
+    }
+
+    /// Send an event to Click (Press + Release) this key
+    fn release(&self) {
+        mimpl::release(*self)
+    }
+
     /// Bind an action on this MouseButton, action will be invoked on a new thread.
     pub fn bind(&self, handler: impl Fn(Mouse) + Send + Sync + 'static) {
         bind_button(*self, Action::handle_mouse(handler))

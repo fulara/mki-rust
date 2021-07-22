@@ -1,4 +1,3 @@
-use crate::Button;
 use crate::{are_pressed, get_state, register_hotkey, set_state, Keyboard, Mouse};
 use serde::de::Error;
 use serde::{Deserialize, Serialize};
