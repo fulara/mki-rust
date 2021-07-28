@@ -14,8 +14,11 @@ enum KeybdAction {
 }
 
 pub(crate) mod kimpl {
-    use crate::keyboard_mouse::{send_key_stroke, KeybdAction};
+    use crate::keyboard_mouse::{display, send_key_stroke, KeybdAction};
     use crate::Keyboard;
+    use std::mem::MaybeUninit;
+    use std::sync::atomic::Ordering;
+    use x11::xlib;
 
     pub(crate) fn press(key: Keyboard) {
         send_key_stroke(KeybdAction::Press, key)
@@ -29,9 +32,21 @@ pub(crate) mod kimpl {
         send_key_stroke(KeybdAction::Click, key)
     }
 
-    pub(crate) fn is_toggled(_key: Keyboard) -> bool {
-        println!("TODO: Linux is_toggled");
-        false
+    pub(crate) fn is_toggled(key: Keyboard) -> bool {
+        if let Some(key) = match key {
+            Keyboard::ScrollLock => Some(4),
+            Keyboard::NumLock => Some(2),
+            Keyboard::CapsLock => Some(1),
+            _ => None,
+        } {
+            let mut state: xlib::XKeyboardState = unsafe { MaybeUninit::zeroed().assume_init() };
+            unsafe {
+                xlib::XGetKeyboardControl(display().display.load(Ordering::Relaxed), &mut state);
+            }
+            state.led_mask & key != 0
+        } else {
+            false
+        }
     }
 }
 
