@@ -81,17 +81,17 @@ impl Keyboard {
 
 impl Mouse {
     /// Send an event to Press this Button
-    fn press(&self) {
+    pub fn press(&self) {
         mimpl::press(*self)
     }
 
     /// Send an event to Release this Button
-    fn click(&self) {
+    pub fn click(&self) {
         mimpl::click(*self)
     }
 
     /// Send an event to Click (Press + Release) this key
-    fn release(&self) {
+    pub fn release(&self) {
         mimpl::release(*self)
     }
 
