@@ -1,8 +1,12 @@
 use crate::{Keyboard, Mouse};
+use std::ptr;
+use std::sync::atomic::{AtomicPtr, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::time::Duration;
 use uinput::event::keyboard::Key;
 use uinput::event::Code;
+use x11::xlib;
+
 enum KeybdAction {
     Press,
     Release,
@@ -67,6 +71,41 @@ fn device() -> MutexGuard<'static, uinput::Device> {
         };
     }
     DEVICE.lock().unwrap()
+}
+
+struct Display {
+    display: MutexGuard<'static, AtomicPtr<xlib::Display>>,
+}
+
+impl Display {
+    fn new(display: MutexGuard<'static, AtomicPtr<xlib::Display>>) -> Self {
+        let display = Display { display };
+        unsafe {
+            xlib::XLockDisplay(display.display.load(Ordering::Relaxed));
+        }
+        display
+    }
+}
+
+impl Drop for Display {
+    fn drop(&mut self) {
+        unsafe {
+            let display = self.display.load(Ordering::Relaxed);
+            xlib::XFlush(display);
+            xlib::XUnlockDisplay(display);
+        }
+    }
+}
+
+fn display() -> Display {
+    lazy_static::lazy_static! {
+        static ref DISPLAY: Arc<Mutex<AtomicPtr<xlib::Display>>> = {
+            unsafe {xlib::XInitThreads()};
+            let display = unsafe { xlib::XOpenDisplay(ptr::null()) };
+            Arc::new(Mutex::new(AtomicPtr::new(display)))
+        };
+    }
+    Display::new(DISPLAY.lock().unwrap())
 }
 
 pub fn key_to_event(key: Keyboard) -> Option<Key> {
@@ -312,18 +351,43 @@ pub(crate) fn mouse_code_to_key(code: u32) -> Option<Mouse> {
     })
 }
 
+fn mouse_to_xlib_code(mouse: Mouse) -> Option<u32> {
+    let mapped = match mouse {
+        Mouse::Left => 1,
+        Mouse::Right => 3,
+        Mouse::Middle => 2,
+        Mouse::Side => 4,
+        Mouse::Extra => 5,
+        Mouse::Forward | Mouse::Back | Mouse::Task => return None,
+    };
+    Some(mapped)
+}
+
 pub(crate) mod mimpl {
+    use super::display;
+    use crate::keyboard_mouse::mouse_to_xlib_code;
     use crate::Mouse;
+    use std::sync::atomic::Ordering;
+    use x11::xtest;
 
-    pub(crate) fn press(_button: Mouse) {
-        println!("TODO: Linux press mouse");
+    pub(crate) fn press(button: Mouse) {
+        if let Some(code) = mouse_to_xlib_code(button) {
+            unsafe {
+                xtest::XTestFakeButtonEvent(display().display.load(Ordering::Relaxed), code, 1, 0)
+            };
+        }
     }
 
-    pub(crate) fn click(_button: Mouse) {
-        println!("TODO: Linux mouse input");
+    pub(crate) fn click(button: Mouse) {
+        press(button);
+        release(button);
     }
 
-    pub(crate) fn release(_button: Mouse) {
-        println!("TODO: Linux mouse input");
+    pub(crate) fn release(button: Mouse) {
+        if let Some(code) = mouse_to_xlib_code(button) {
+            unsafe {
+                xtest::XTestFakeButtonEvent(display().display.load(Ordering::Relaxed), code, 0, 0)
+            };
+        }
     }
 }
