@@ -126,6 +126,8 @@ cross check --target x86_64-pc-windows-gnu
 * Simulate Linux mouse input - this requires different library - probably x11.
 * Check for is toggled on linux.
 * Should `are_pressed` support Mouse? for now the `Pressed` in config ignores mouse.
+* Ditch those static states that initialize god knows when, instead introduce a `Context`.
+However the callbacks from libraries will still require a global accessor, but it will defintiely be better. 
 
 #### 0.2 release will have:
 * Mouse to support location.
