@@ -123,8 +123,6 @@ cross check --target x86_64-pc-windows-gnu
 
 ```
 #### TODOs:
-* Simulate Linux mouse input - this requires different library - probably x11.
-* Check for is toggled on linux.
 * Should `are_pressed` support Mouse? for now the `Pressed` in config ignores mouse.
 * Get Mouse Position on linux and windows missing.
 * Ditch those static states that initialize god knows when, instead introduce a `Context`.
