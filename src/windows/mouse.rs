@@ -28,7 +28,7 @@ pub(crate) mod mimpl {
         mouse_interact_with(0, 0, Some(Pos::absolute(x, y)));
     }
 
-    pub(crate) fn move_to_relative(x: i32, y: i32) {
+    pub(crate) fn move_by(x: i32, y: i32) {
         mouse_interact_with(0, 0, Some(Pos::relative(x, y)));
     }
 }

@@ -99,8 +99,8 @@ impl Mouse {
         mimpl::move_to(x, y)
     }
 
-    pub fn move_to_relative(x: i32, y: i32) {
-        mimpl::move_to_relative(x, y)
+    pub fn move_by(x: i32, y: i32) {
+        mimpl::move_by(x, y)
     }
 
     // TODO: this does not work on linux, duh. add it.

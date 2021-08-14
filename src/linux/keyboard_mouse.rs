@@ -430,7 +430,7 @@ pub(crate) mod mimpl {
         }
     }
 
-    pub(crate) fn move_to_relative(x: i32, y: i32) {
+    pub(crate) fn move_by(x: i32, y: i32) {
         let display = display();
         let display = display.load();
         unsafe {
