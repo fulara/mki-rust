@@ -126,8 +126,14 @@ cross check --target x86_64-pc-windows-gnu
 * Simulate Linux mouse input - this requires different library - probably x11.
 * Check for is toggled on linux.
 * Should `are_pressed` support Mouse? for now the `Pressed` in config ignores mouse.
+* Get Mouse Position on linux and windows missing.
 * Ditch those static states that initialize god knows when, instead introduce a `Context`.
 However the callbacks from libraries will still require a global accessor, but it will defintiely be better. 
+* Introduce a new way to click the mouse button at given position so something like:
+```
+send_mouse_event(x, y, Mouse);
+```
+Its a bit awkward this Mouse but oh well.
 
 #### 0.2 release will have:
 * Mouse to support location.
@@ -135,6 +141,7 @@ However the callbacks from libraries will still require a global accessor, but i
 * Mouse to support sending key strokes at given coordinates.
 * Should sequenced be removed and instead a way using `parking_lot::channel` be introduced?
 That would be more elastic in terms of usage. Slight problem that there would have to be a (tx,rx) pair held.
+* Linux display usage is ultra ugly right now, just change it to a lambda.
 
 # Support
 If you want to show appreciation for the stuff this repo gave you - you can do so via https://www.buymeacoffee.com/fulara
