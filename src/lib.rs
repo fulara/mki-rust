@@ -103,6 +103,11 @@ impl Mouse {
         mimpl::move_to_relative(x, y)
     }
 
+    // TODO: this does not work on linux, duh. add it.
+    pub fn track(f: impl Fn(i32, i32) + Send + Sync + 'static) {
+        registry().set_mouse_tracker(Some(Arc::new(Box::new(f))));
+    }
+
     /// Bind an action on this MouseButton, action will be invoked on a new thread.
     pub fn bind(&self, handler: impl Fn(Mouse) + Send + Sync + 'static) {
         bind_button(*self, Action::handle_mouse(handler))
@@ -385,8 +390,4 @@ pub fn get_state(key: &str) -> Option<String> {
 /// Unregisters hotkey, a original sequence has to be passed as parameter..
 pub fn unregister_hotkey(sequence: &[Keyboard]) {
     registry().unregister_hotkey(sequence);
-}
-
-pub fn set_mouse_tracker(f: impl Fn(i32, i32) + Send + Sync + 'static) {
-    registry().set_mouse_tracker(Some(Arc::new(Box::new(f))));
 }
