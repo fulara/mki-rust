@@ -100,6 +100,11 @@ impl Display {
         }
         display
     }
+
+    // TODO: bind the lifetime to self
+    fn load(&self) -> *mut xlib::Display {
+        self.display.load(Ordering::Relaxed)
+    }
 }
 
 impl Drop for Display {
@@ -383,6 +388,7 @@ pub(crate) mod mimpl {
     use crate::keyboard_mouse::mouse_to_xlib_code;
     use crate::Mouse;
     use std::sync::atomic::Ordering;
+    use x11::xlib::{XDefaultScreen, XRootWindow, XWarpPointer};
     use x11::xtest;
 
     pub(crate) fn press(button: Mouse) {
@@ -403,6 +409,32 @@ pub(crate) mod mimpl {
             unsafe {
                 xtest::XTestFakeButtonEvent(display().display.load(Ordering::Relaxed), code, 0, 0)
             };
+        }
+    }
+
+    pub(crate) fn move_to(x: i32, y: i32) {
+        let display = display();
+        let display = display.load();
+        unsafe {
+            XWarpPointer(
+                display,
+                0,
+                XRootWindow(display, XDefaultScreen(display)),
+                0,
+                0,
+                0,
+                0,
+                x,
+                y,
+            );
+        }
+    }
+
+    pub(crate) fn move_to_relative(x: i32, y: i32) {
+        let display = display();
+        let display = display.load();
+        unsafe {
+            XWarpPointer(display, 0, 0, 0, 0, 0, 0, x, y);
         }
     }
 }

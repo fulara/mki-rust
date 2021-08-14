@@ -95,6 +95,14 @@ impl Mouse {
         mimpl::release(*self)
     }
 
+    pub fn move_to(x: i32, y: i32) {
+        mimpl::move_to(x, y)
+    }
+
+    pub fn move_to_relative(x: i32, y: i32) {
+        mimpl::move_to_relative(x, y)
+    }
+
     /// Bind an action on this MouseButton, action will be invoked on a new thread.
     pub fn bind(&self, handler: impl Fn(Mouse) + Send + Sync + 'static) {
         bind_button(*self, Action::handle_mouse(handler))
@@ -114,11 +122,6 @@ impl Mouse {
     pub fn is_pressed(&self) -> bool {
         registry().is_pressed(Event::Mouse(*self))
     }
-}
-
-#[cfg(target_os = "windows")]
-pub fn move_mouse(x: i32, y: i32) {
-    move_mouse_impl(x, y);
 }
 
 #[derive(Clone)]

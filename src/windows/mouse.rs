@@ -7,7 +7,9 @@ use winapi::um::winuser::{
 };
 
 pub(crate) mod mimpl {
-    use crate::windows::mouse::{mouse_click, mouse_press, mouse_release};
+    use crate::windows::mouse::{
+        mouse_click, mouse_interact_with, mouse_press, mouse_release, Pos,
+    };
     use crate::Mouse;
 
     pub(crate) fn press(button: Mouse) {
@@ -21,18 +23,47 @@ pub(crate) mod mimpl {
     pub(crate) fn release(button: Mouse) {
         mouse_release(button);
     }
+
+    pub(crate) fn move_to(x: i32, y: i32) {
+        mouse_interact_with(0, 0, Some(Pos::absolute(x, y)));
+    }
+
+    pub(crate) fn move_to_relative(x: i32, y: i32) {
+        mouse_interact_with(0, 0, Some(Pos::relative(x, y)));
+    }
 }
 
 struct Pos {
     x: i32,
     y: i32,
+    absolute: bool,
+}
+
+impl Pos {
+    fn absolute(x: i32, y: i32) -> Self {
+        Pos {
+            x,
+            y,
+            absolute: true,
+        }
+    }
+
+    fn relative(x: i32, y: i32) -> Self {
+        Pos {
+            x,
+            y,
+            absolute: false,
+        }
+    }
 }
 
 fn mouse_interact_with(mut interaction: u32, mouse_data: u16, pos: Option<Pos>) {
     let mut x = 0;
     let mut y = 0;
     if let Some(pos) = pos {
-        interaction |= MOUSEEVENTF_ABSOLUTE;
+        if pos.absolute {
+            interaction |= MOUSEEVENTF_ABSOLUTE;
+        }
         x = pos.x;
         y = pos.y;
     }
@@ -110,8 +141,4 @@ fn mouse_to_pos(button: Mouse) -> Option<Pos> {
         Middle | DoubleMiddle => None,
         Side | DoubleSide | Extra | DoubleExtra => None,
     }
-}
-
-pub fn move_mouse_impl(x: i32, y: i32) {
-    mouse_interact_with(0, 0, Some(Pos { x, y }));
 }
