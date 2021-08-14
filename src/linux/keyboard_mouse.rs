@@ -14,10 +14,9 @@ enum KeybdAction {
 }
 
 pub(crate) mod kimpl {
-    use crate::keyboard_mouse::{display, send_key_stroke, KeybdAction};
+    use crate::keyboard_mouse::{send_key_stroke, with_display, KeybdAction};
     use crate::Keyboard;
     use std::mem::MaybeUninit;
-    use std::sync::atomic::Ordering;
     use x11::xlib;
 
     pub(crate) fn press(key: Keyboard) {
@@ -40,9 +39,9 @@ pub(crate) mod kimpl {
             _ => None,
         } {
             let mut state: xlib::XKeyboardState = unsafe { MaybeUninit::zeroed().assume_init() };
-            unsafe {
-                xlib::XGetKeyboardControl(display().display.load(Ordering::Relaxed), &mut state);
-            }
+            with_display(|display| unsafe {
+                xlib::XGetKeyboardControl(display, &mut state);
+            });
             state.led_mask & key != 0
         } else {
             false
@@ -88,36 +87,7 @@ fn device() -> MutexGuard<'static, uinput::Device> {
     DEVICE.lock().unwrap()
 }
 
-struct Display {
-    display: MutexGuard<'static, AtomicPtr<xlib::Display>>,
-}
-
-impl Display {
-    fn new(display: MutexGuard<'static, AtomicPtr<xlib::Display>>) -> Self {
-        let display = Display { display };
-        unsafe {
-            xlib::XLockDisplay(display.display.load(Ordering::Relaxed));
-        }
-        display
-    }
-
-    // TODO: bind the lifetime to self
-    fn load(&self) -> *mut xlib::Display {
-        self.display.load(Ordering::Relaxed)
-    }
-}
-
-impl Drop for Display {
-    fn drop(&mut self) {
-        unsafe {
-            let display = self.display.load(Ordering::Relaxed);
-            xlib::XFlush(display);
-            xlib::XUnlockDisplay(display);
-        }
-    }
-}
-
-fn display() -> Display {
+fn with_display<R>(mut f: impl FnMut(*mut xlib::Display) -> R) -> R {
     lazy_static::lazy_static! {
         static ref DISPLAY: Arc<Mutex<AtomicPtr<xlib::Display>>> = {
             unsafe {xlib::XInitThreads()};
@@ -125,7 +95,15 @@ fn display() -> Display {
             Arc::new(Mutex::new(AtomicPtr::new(display)))
         };
     }
-    Display::new(DISPLAY.lock().unwrap())
+    let locked = DISPLAY.lock().unwrap();
+    let display: *mut xlib::Display = locked.load(Ordering::Relaxed);
+    unsafe { xlib::XLockDisplay(display) }
+    let r = f(display);
+    unsafe {
+        xlib::XFlush(display);
+        xlib::XUnlockDisplay(display);
+    }
+    r
 }
 
 pub fn key_to_event(key: Keyboard) -> Option<Key> {
@@ -384,18 +362,16 @@ fn mouse_to_xlib_code(mouse: Mouse) -> Option<u32> {
 }
 
 pub(crate) mod mimpl {
-    use super::display;
-    use crate::keyboard_mouse::mouse_to_xlib_code;
+    use crate::keyboard_mouse::{mouse_to_xlib_code, with_display};
     use crate::Mouse;
-    use std::sync::atomic::Ordering;
     use x11::xlib::{XDefaultScreen, XRootWindow, XWarpPointer};
     use x11::xtest;
 
     pub(crate) fn press(button: Mouse) {
         if let Some(code) = mouse_to_xlib_code(button) {
-            unsafe {
-                xtest::XTestFakeButtonEvent(display().display.load(Ordering::Relaxed), code, 1, 0)
-            };
+            with_display(|display| {
+                unsafe { xtest::XTestFakeButtonEvent(display, code, 1, 0) };
+            });
         }
     }
 
@@ -406,16 +382,14 @@ pub(crate) mod mimpl {
 
     pub(crate) fn release(button: Mouse) {
         if let Some(code) = mouse_to_xlib_code(button) {
-            unsafe {
-                xtest::XTestFakeButtonEvent(display().display.load(Ordering::Relaxed), code, 0, 0)
-            };
+            with_display(|display| {
+                unsafe { xtest::XTestFakeButtonEvent(display, code, 0, 0) };
+            });
         }
     }
 
     pub(crate) fn move_to(x: i32, y: i32) {
-        let display = display();
-        let display = display.load();
-        unsafe {
+        with_display(|display| unsafe {
             XWarpPointer(
                 display,
                 0,
@@ -427,14 +401,12 @@ pub(crate) mod mimpl {
                 x,
                 y,
             );
-        }
+        });
     }
 
     pub(crate) fn move_by(x: i32, y: i32) {
-        let display = display();
-        let display = display.load();
-        unsafe {
+        with_display(|display| unsafe {
             XWarpPointer(display, 0, 0, 0, 0, 0, 0, x, y);
-        }
+        });
     }
 }
