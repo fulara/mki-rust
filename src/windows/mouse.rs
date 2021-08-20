@@ -8,7 +8,8 @@ use winapi::um::winuser::{
 
 pub(crate) mod mimpl {
     use crate::windows::mouse::{
-        mouse_click, mouse_interact_with, mouse_press, mouse_release, Pos,
+        button_to_event_down, button_to_mouse_data, mouse_click, mouse_interact_with, mouse_press,
+        mouse_release, Pos,
     };
     use crate::Mouse;
 
@@ -30,6 +31,14 @@ pub(crate) mod mimpl {
 
     pub(crate) fn move_by(x: i32, y: i32) {
         mouse_interact_with(0, 0, Some(Pos::relative(x, y)));
+    }
+
+    pub(crate) fn click_at(x: i32, y: i32, button: Mouse) {
+        mouse_interact_with(
+            button_to_event_down(button),
+            button_to_mouse_data(button),
+            Some(Pos::absolute(x, y)),
+        )
     }
 }
 

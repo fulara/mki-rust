@@ -125,13 +125,10 @@ cross check --target x86_64-pc-windows-gnu
 #### TODOs:
 * Should `are_pressed` support Mouse? for now the `Pressed` in config ignores mouse.
 * Get Mouse Position on linux and windows missing.
+
+##### Future Eventual Considerations
 * Ditch those static states that initialize god knows when, instead introduce a `Context`.
-However the callbacks from libraries will still require a global accessor, but it will defintiely be better. 
-* Introduce a new way to click the mouse button at given position so something like:
-```
-send_mouse_event(x, y, Mouse);
-```
-Its a bit awkward this Mouse but oh well.
+  However the callbacks from libraries will still require a global accessor, but it will defintiely be better.
 
 #### 0.2 release will have:
 * Mouse to support location.

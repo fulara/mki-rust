@@ -409,4 +409,9 @@ pub(crate) mod mimpl {
             XWarpPointer(display, 0, 0, 0, 0, 0, 0, x, y);
         });
     }
+
+    pub(crate) fn click_at(x: i32, y: i32, button: Mouse) {
+        Self::move_to(x, y);
+        Self::click(button);
+    }
 }

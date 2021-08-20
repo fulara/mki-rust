@@ -103,6 +103,10 @@ impl Mouse {
         mimpl::move_by(x, y)
     }
 
+    pub fn click_at(&self, x: i32, y: i32) {
+        mimpl::click_at(x, y, *self);
+    }
+
     // TODO: this does not work on linux, duh. add it.
     pub fn track(f: impl Fn(i32, i32) + Send + Sync + 'static) {
         registry().set_mouse_tracker(Some(Arc::new(Box::new(f))));
