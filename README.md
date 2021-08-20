@@ -129,14 +129,18 @@ cross check --target x86_64-pc-windows-gnu
 ##### Future Eventual Considerations
 * Ditch those static states that initialize god knows when, instead introduce a `Context`.
   However the callbacks from libraries will still require a global accessor, but it will defintiely be better.
+* Should sequenced be removed and instead channel way be introduced?. 
+  By storing a Vec of TX could just propagate the events.
+  This has the problem that it will be a bit awkward to send the mouse pos.
+  Because of the State enum being separated from the event ones.
+  Maybe the State should be deleted and instead the enums would have Up and down?
+  That would make the keyboard enum a bit hectic though.
 
 #### 0.2 release will have:
-* Mouse to support location.
-* Mouse to support live tracking callback
-* Mouse to support sending key strokes at given coordinates.
-* Should sequenced be removed and instead a way using `parking_lot::channel` be introduced?
-That would be more elastic in terms of usage. Slight problem that there would have to be a (tx,rx) pair held.
-* Linux display usage is ultra ugly right now, just change it to a lambda.
+* Mouse to support location - done.
+* Mouse to support live tracking callback - Linux needs work.
+* Mouse to support sending key strokes at given coordinates - added click_at.
+* Linux display usage is ultra ugly right now, just change it to a lambda - done.
 
 # Support
 If you want to show appreciation for the stuff this repo gave you - you can do so via https://www.buymeacoffee.com/fulara
