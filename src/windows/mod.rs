@@ -98,6 +98,7 @@ unsafe extern "system" fn mouse_hook(
         None
     };
     let w_param_u32: u32 = w_param.try_into().expect("w_param > u32");
+    registry().update_mouse_position(data.pt.x, data.pt.y);
     let inhibit = match w_param_u32 {
         code if code == WM_LBUTTONDOWN => registry().event_down(Event::Mouse(Mouse::Left)),
         code if code == WM_LBUTTONDBLCLK => registry().event_click(Event::Mouse(Mouse::DoubleLeft)),
@@ -128,7 +129,6 @@ unsafe extern "system" fn mouse_hook(
         code if code == WM_XBUTTONUP => registry().event_up(Event::Mouse(maybe_x_button.unwrap())),
         code if code == WM_XBUTTONUP => registry().event_up(Event::Mouse(maybe_x_button.unwrap())),
         _ => {
-            registry().update_mouse_position(data.pt.x, data.pt.y);
             InhibitEvent::No
         }
     };
