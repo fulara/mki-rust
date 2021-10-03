@@ -143,7 +143,7 @@ fn handle_action(action: &Action) {
         }
         Action::Pressed(pressed) => {
             let keys = pressed.input.key.as_ref().unwrap();
-            if are_pressed(&keys) {
+            if are_pressed(keys) {
                 handle_actions(&pressed.action);
             }
         }

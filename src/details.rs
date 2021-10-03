@@ -160,7 +160,7 @@ impl Registry {
         if let Event::Keyboard(key) = event {
             for (sequence, callback) in self.hotkeys.lock().unwrap().iter() {
                 if sequence.last() == Some(&key)
-                    && self.pressed.lock().unwrap().are_pressed(&sequence)
+                    && self.pressed.lock().unwrap().are_pressed(sequence)
                 {
                     callbacks.push(callback.clone());
                 }
