@@ -136,11 +136,20 @@ cross check --target x86_64-pc-windows-gnu
   Maybe the State should be deleted and instead the enums would have Up and down?
   That would make the keyboard enum a bit hectic though.
 
-#### 0.2 release will have:
-* Mouse to support location - done.
-* Mouse to support live tracking callback - Linux needs work.
+#### 0.3 release plan:
+
+* It would be nice to support multi screen on windows.
+atm I don't have multi screens so hard to test.
+* Linux to support mouse live tracking callback
+
+# Changelog
+#### 0.2 release:
+* Mouse to support location.
+* Windows to support mouse live tracking callback.
 * Mouse to support sending key strokes at given coordinates - added click_at.
-* Linux display usage is ultra ugly right now, just change it to a lambda - done.
+* Linux display usage is ultra ugly right now, just change it to a lambda.
+* Various api breaking changes.
+
 
 # Support
 If you want to show appreciation for the stuff this repo gave you - you can do so via https://www.buymeacoffee.com/fulara

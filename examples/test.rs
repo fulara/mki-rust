@@ -1,4 +1,5 @@
 use mki::*;
+use std::sync::atomic::{AtomicI64, Ordering};
 use std::thread;
 use std::time::Duration;
 
@@ -46,6 +47,14 @@ fn main() {
     }
 
     register_hotkey(&[LeftControl, U], || println!("Ctrl+U pressed"));
+
+    Mouse::track(|x, y| {
+        static COUNTER: AtomicI64 = AtomicI64::new(0);
+        if COUNTER.load(Ordering::Relaxed) % 100 == 0 {
+            println!("mouse movement (once every 100 ticks): {} {} ", x, y)
+        }
+        COUNTER.fetch_add(1, Ordering::Relaxed);
+    });
 
     B.bind(|_| {
         // Clearing bind for nicer output.
