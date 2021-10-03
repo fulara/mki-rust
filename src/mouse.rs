@@ -1,27 +1,29 @@
 use serde::{Deserialize, Serialize};
 
+#[cfg(target_os = "windows")] // Not sure how to detect double on linux
 #[derive(Copy, Clone, Ord, PartialOrd, Hash, Eq, PartialEq, Debug, Serialize, Deserialize)]
 pub enum Mouse {
-    // TODO: double clicks.
     Left,
-    #[cfg(target_os = "windows")] // Not sure how to detect double on linux
     DoubleLeft,
     Right,
-    #[cfg(target_os = "windows")] // Not sure how to detect double on linux
     DoubleRight,
     Middle,
-    #[cfg(target_os = "windows")] // Not sure how to detect double on linux
     DoubleMiddle,
-    Side, // XBUTTON1 on win
-    #[cfg(target_os = "windows")] // Not sure how to detect double on linux
+    Side, // XBUTTON1
     DoubleSide,
-    Extra, // XBUTTON2 on win
-    #[cfg(target_os = "windows")] // Not sure how to detect double on linux
+    Extra, // XBUTTON2
     DoubleExtra,
-    #[cfg(target_os = "linux")]
+}
+
+#[cfg(target_os = "linux")]
+#[derive(Copy, Clone, Ord, PartialOrd, Hash, Eq, PartialEq, Debug, Serialize, Deserialize)]
+pub enum Mouse {
+    Left,
+    Right,
+    Middle,
+    Side,
+    Extra,
     Forward,
-    #[cfg(target_os = "linux")]
     Back,
-    #[cfg(target_os = "linux")]
     Task,
 }
