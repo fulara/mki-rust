@@ -138,7 +138,7 @@ impl Mouse {
 /// Whether to propagate the event for applications down the callstack.
 pub enum InhibitEvent {
     Yes,
-    Maybe(Arc<Box<dyn Fn() -> InhibitEvent + Send + Sync>>),
+    Maybe(Arc<dyn Fn() -> InhibitEvent + Send + Sync>),
     No,
 }
 
@@ -155,7 +155,7 @@ impl InhibitEvent {
     }
 
     pub fn maybe(f: impl Fn() -> InhibitEvent + Send + Sync + 'static) -> Self {
-        InhibitEvent::Maybe(Arc::new(Box::new(f)))
+        InhibitEvent::Maybe(Arc::new(f))
     }
 }
 
