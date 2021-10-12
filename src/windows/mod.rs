@@ -111,13 +111,22 @@ unsafe extern "system" fn mouse_hook(
             registry().event_down(Event::Mouse(Mouse::DoubleMiddle))
         }
         code if code == WM_XBUTTONDOWN => {
-            registry().event_down(Event::Mouse(maybe_x_button.unwrap()))
+            if let Some(x_button) = maybe_x_button {
+                registry().event_down(Event::Mouse(x_button))
+            } else {
+                InhibitEvent::No
+            }
         }
         code if code == WM_XBUTTONDBLCLK => {
-            if Mouse::Side == maybe_x_button.unwrap() {
-                registry().event_click(Event::Mouse(Mouse::DoubleSide))
+            if let Some(x_button) = maybe_x_button {
+                // TODO: figure out the other XButtons.
+                if Mouse::Side == x_button {
+                    registry().event_click(Event::Mouse(Mouse::DoubleSide))
+                } else {
+                    registry().event_click(Event::Mouse(Mouse::DoubleExtra))
+                }
             } else {
-                registry().event_click(Event::Mouse(Mouse::DoubleExtra))
+                InhibitEvent::No
             }
         }
         code if code == WM_LBUTTONUP => registry().event_up(Event::Mouse(Mouse::Left)),
@@ -126,8 +135,20 @@ unsafe extern "system" fn mouse_hook(
         code if code == WM_RBUTTONUP => registry().event_up(Event::Mouse(Mouse::Right)),
         code if code == WM_MBUTTONUP => registry().event_up(Event::Mouse(Mouse::Middle)),
         code if code == WM_MBUTTONUP => registry().event_up(Event::Mouse(Mouse::Middle)),
-        code if code == WM_XBUTTONUP => registry().event_up(Event::Mouse(maybe_x_button.unwrap())),
-        code if code == WM_XBUTTONUP => registry().event_up(Event::Mouse(maybe_x_button.unwrap())),
+        code if code == WM_XBUTTONUP => {
+            if let Some(x_button) = maybe_x_button {
+                registry().event_up(Event::Mouse(x_button))
+            } else {
+                InhibitEvent::No
+            }
+        },
+        code if code == WM_XBUTTONUP => {
+            if let Some(x_button) = maybe_x_button {
+                registry().event_up(Event::Mouse(x_button))
+            } else {
+                InhibitEvent::No
+            }
+        },
         _ => InhibitEvent::No,
     };
     if inhibit.should_inhibit() {
