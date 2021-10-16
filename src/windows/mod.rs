@@ -141,14 +141,14 @@ unsafe extern "system" fn mouse_hook(
             } else {
                 InhibitEvent::No
             }
-        },
+        }
         code if code == WM_XBUTTONUP => {
             if let Some(x_button) = maybe_x_button {
                 registry().event_up(Event::Mouse(x_button))
             } else {
                 InhibitEvent::No
             }
-        },
+        }
         _ => InhibitEvent::No,
     };
     if inhibit.should_inhibit() {
