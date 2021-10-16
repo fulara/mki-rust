@@ -395,3 +395,7 @@ pub fn get_state(key: &str) -> Option<String> {
 pub fn unregister_hotkey(sequence: &[Keyboard]) {
     registry().unregister_hotkey(sequence);
 }
+
+pub fn enable_debug() {
+    registry().enable_debug();
+}

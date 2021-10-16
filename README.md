@@ -141,6 +141,7 @@ cross check --target x86_64-pc-windows-gnu
 * It would be nice to support multi screen on windows.
 atm I don't have multi screens so hard to test.
 * Linux to support mouse live tracking callback
+* Add a debug mode - --debug that prints whenever anything that has registered hotkey is clicked
 
 # Changelog
 #### 0.2 release:

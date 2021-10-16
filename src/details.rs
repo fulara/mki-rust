@@ -5,6 +5,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 use std::thread::JoinHandle;
+use std::time::SystemTime;
 
 pub(crate) fn registry() -> &'static Registry {
     lazy_static::lazy_static! {
@@ -79,6 +80,7 @@ pub(crate) struct Registry {
     state: Mutex<HashMap<String, String>>,
 
     pub(crate) tracking_enabled: AtomicBool,
+    pub(crate) debug_enabled: AtomicBool,
 }
 
 impl Registry {
@@ -102,6 +104,7 @@ impl Registry {
             state: Mutex::new(HashMap::new()),
             tracking_enabled: AtomicBool::new(false),
             mouse_tracking_callback: Mutex::new(None),
+            debug_enabled: AtomicBool::new(false),
         }
     }
 
@@ -129,6 +132,9 @@ impl Registry {
     }
 
     fn invoke_action(&self, action: Arc<Action>, event: Event, state: State) {
+        if self.debug_enabled.load(Ordering::Relaxed) {
+            self.maybe_log_event(&format!("invoking: {:?}", state), event);
+        }
         if action.defer {
             thread::spawn(move || {
                 (action.callback)(event, state);
@@ -155,6 +161,7 @@ impl Registry {
     }
 
     pub(crate) fn event_down(&self, event: Event) -> InhibitEvent {
+        self.maybe_log_event("down", event);
         self.pressed.lock().unwrap().pressed(event);
         let mut callbacks = Vec::new();
         if let Event::Keyboard(key) = event {
@@ -186,6 +193,7 @@ impl Registry {
     }
 
     pub(crate) fn event_up(&self, event: Event) -> InhibitEvent {
+        self.maybe_log_event("up", event);
         self.pressed.lock().unwrap().released(event);
         let state = State::Released;
         let (global_action, key_action) = self.map_event_to_actions(event);
@@ -201,6 +209,7 @@ impl Registry {
 
     #[cfg(target_os = "windows")] // Not sure how to detect double on linux
     pub(crate) fn event_click(&self, event: Event) -> InhibitEvent {
+        self.maybe_log_event("click", event);
         let inhibit = self.event_down(event);
         self.event_up(event);
         inhibit
@@ -219,10 +228,25 @@ impl Registry {
         sequence: &[Keyboard],
         handler: impl Fn() + Send + Sync + 'static,
     ) {
-        self.hotkeys
-            .lock()
-            .unwrap()
-            .insert(sequence.to_vec(), Arc::new(Box::new(handler)));
+        let mut hotkeys = self.hotkeys.lock().unwrap();
+        if self.debug_enabled.load(Ordering::Relaxed) {
+            hotkeys.insert(
+                sequence.to_vec(),
+                Arc::new(Box::new({
+                    let sequence = sequence.to_vec();
+                    move || {
+                        println!(
+                            "Invoking hotkey. sequence: {:?} ts: {:?}",
+                            sequence,
+                            log_timestamp()
+                        );
+                        handler()
+                    }
+                })),
+            );
+        } else {
+            hotkeys.insert(sequence.to_vec(), Arc::new(Box::new(handler)));
+        };
     }
 
     pub(crate) fn unregister_hotkey(&self, sequence: &[Keyboard]) {
@@ -260,4 +284,19 @@ impl Registry {
             }
         }
     }
+
+    pub fn enable_debug(&self) {
+        self.debug_enabled.store(true, Ordering::Relaxed);
+    }
+
+    pub fn maybe_log_event(&self, prefix: &str, event: Event) {
+        println!("Event: {} - {:?}. ts: {}", prefix, event, log_timestamp())
+    }
+}
+
+fn log_timestamp() -> u64 {
+    SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .expect("<1970 ?")
+        .as_secs()
 }
