@@ -1,4 +1,6 @@
-use crate::{are_pressed, get_state, register_hotkey, set_state, Keyboard, Mouse};
+use crate::{
+    are_pressed, get_state, print_pressed_state, register_hotkey, set_state, Keyboard, Mouse,
+};
 use serde::de::Error;
 use serde::{Deserialize, Serialize};
 use std::thread;
@@ -91,6 +93,7 @@ enum Action {
     SetState(SetState),
     Println(String),
     PrintState(String),
+    PrintPressedState,
 }
 
 fn validate_actions(actions: &[Action]) -> serde_yaml::Result<()> {
@@ -125,6 +128,7 @@ fn validate_action(action: &Action) -> serde_yaml::Result<()> {
         | Action::SetState(_)
         | Action::Println(_)
         | Action::PrintState(_) => {}
+        Action::PrintPressedState => {}
     }
 
     Ok(())
@@ -208,6 +212,9 @@ fn handle_action(action: &Action) {
         }
         Action::PrintState(state) => {
             println!("State under key: {} is: {:?}", state, get_state(state))
+        }
+        Action::PrintPressedState => {
+            print_pressed_state();
         }
     }
 }

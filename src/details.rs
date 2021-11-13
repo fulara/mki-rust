@@ -1,6 +1,7 @@
 use crate::{install_hooks, process_message, Action, Event, Mouse, State};
 use crate::{InhibitEvent, Keyboard};
 use std::collections::HashMap;
+use std::fmt::Write;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
@@ -291,6 +292,21 @@ impl Registry {
 
     pub fn maybe_log_event(&self, prefix: &str, event: Event) {
         println!("Event: {} - {:?}. ts: {}", prefix, event, log_timestamp())
+    }
+
+    pub fn print_pressed_state(&self) {
+        let pressed = &self.pressed.lock().unwrap();
+        let mut fmt = String::new();
+        write!(&mut fmt, "[").expect("cannot fail");
+        for i in 0..pressed.pressed.len() {
+            if i != 0 {
+                write!(&mut fmt, ", ").expect("cannot fail");
+            }
+            write!(&mut fmt, "{}", pressed.pressed[i]).expect("cannot fail");
+        }
+        write!(&mut fmt, "]").expect("cannot fail");
+
+        println!("Pressed Dump ts: {} - {}", log_timestamp(), fmt);
     }
 }
 

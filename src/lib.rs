@@ -409,3 +409,7 @@ pub fn unregister_hotkey(sequence: &[Keyboard]) {
 pub fn enable_debug() {
     registry().enable_debug();
 }
+
+pub fn print_pressed_state() {
+    registry().print_pressed_state();
+}
