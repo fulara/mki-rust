@@ -44,6 +44,10 @@ impl Input {
         } else if let Some(buttons) = self.button.as_ref() {
             if buttons.is_empty() {
                 Err(serde_yaml::Error::custom("Bind had empty buttons"))
+            } else if buttons.len() != 1 {
+                Err(serde_yaml::Error::custom(
+                    "Only single mouse button hotkey currently supported",
+                ))
             } else {
                 Ok(())
             }
@@ -223,16 +227,34 @@ pub fn load_config(content: &str) -> Result<(), serde_yaml::Error> {
     let config: Config = serde_yaml::from_str(content)?;
     for bind in config.bind {
         bind.input.validate()?;
-        let keys = bind.input.key.unwrap();
-        println!("Now binding a hotkey for: {:?}", keys);
-        if let Some(description) = bind.description {
-            println!("description: {}", description);
-        }
         let action = bind.action;
         validate_action(&action)?;
-        register_hotkey(&keys, move || {
-            handle_action(&action);
-        })
+        match (bind.input.key, bind.input.button) {
+            (Some(keys), None) => {
+                println!("Now binding a hotkey for: {:?}", keys);
+                if let Some(description) = bind.description {
+                    println!("description: {}", description);
+                }
+                register_hotkey(&keys, move || {
+                    handle_action(&action);
+                })
+            }
+            (None, Some(buttons)) => {
+                if buttons.len() != 1 {
+                    panic!(
+                        "Mouse combination cannot be bound, single mouse expected: {:?}",
+                        buttons
+                    );
+                }
+                let button = buttons[0];
+                button.bind(move |_mouse_why_is_this_here| {
+                    handle_action(&action);
+                })
+            }
+            _ => {
+                unreachable!("Checked in validate_action");
+            }
+        }
     }
     Ok(())
 }
