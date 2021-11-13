@@ -27,6 +27,7 @@ pub use sequence::Sequence;
 pub use windows::*;
 
 use crate::details::registry;
+use std::fmt;
 use std::sync::Arc;
 
 #[derive(Copy, Clone, Ord, PartialOrd, Hash, Eq, PartialEq, Debug)]
@@ -163,6 +164,15 @@ impl InhibitEvent {
 pub enum Event {
     Keyboard(Keyboard),
     Mouse(Mouse),
+}
+
+impl fmt::Display for Event {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Event::Keyboard(k) => f.write_fmt(format_args!("k ({})", k)),
+            Event::Mouse(m) => f.write_fmt(format_args!("m ({})", m)),
+        }
+    }
 }
 
 pub struct Action {
