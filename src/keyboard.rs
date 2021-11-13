@@ -1,4 +1,6 @@
 use serde::{Deserialize, Serialize};
+use std::fmt;
+use std::fmt::Formatter;
 use std::str::FromStr;
 
 #[derive(Copy, Clone, Ord, PartialOrd, Hash, Eq, PartialEq, Debug, Serialize, Deserialize)]
@@ -238,5 +240,13 @@ impl FromStr for Keyboard {
             _ => return Err(()),
         };
         Ok(parsed)
+    }
+}
+
+impl fmt::Display for Keyboard {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let code: i32 = (*self).into();
+        f.write_fmt(format_args!("{:?}({})", self, code))?;
+        Ok(())
     }
 }

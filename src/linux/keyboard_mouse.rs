@@ -225,6 +225,16 @@ pub fn key_to_event(key: Keyboard) -> Option<Key> {
     }
 }
 
+impl From<Keyboard> for i32 {
+    fn from(key: Keyboard) -> i32 {
+        if let Some(key) = key_to_event(key) {
+            key.code()
+        } else {
+            -1
+        }
+    }
+}
+
 pub(crate) fn kb_code_to_key(code: u32) -> Keyboard {
     use Keyboard::*;
     match code as i32 {
