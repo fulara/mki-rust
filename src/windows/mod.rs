@@ -9,10 +9,10 @@ use std::ptr::null_mut;
 use winapi::shared::minwindef::{HINSTANCE, LPARAM, LRESULT, WPARAM};
 use winapi::shared::windef::HHOOK__;
 use winapi::um::winuser::{
-    CallNextHookEx, GetMessageW, SetWindowsHookExW, KBDLLHOOKSTRUCT, MSG, WH_KEYBOARD_LL,
-    WH_MOUSE_LL, WM_KEYDOWN, WM_KEYUP, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_MBUTTONDOWN, WM_MBUTTONUP,
-    WM_RBUTTONDOWN, WM_RBUTTONUP, WM_SYSKEYDOWN, WM_SYSKEYUP, WM_XBUTTONDOWN, WM_XBUTTONUP,
-    XBUTTON1, XBUTTON2,
+    CallNextHookEx, GetMessageW, SetWindowsHookExW, GET_XBUTTON_WPARAM, KBDLLHOOKSTRUCT, MSG,
+    WH_KEYBOARD_LL, WH_MOUSE_LL, WM_KEYDOWN, WM_KEYUP, WM_LBUTTONDOWN, WM_LBUTTONUP,
+    WM_MBUTTONDOWN, WM_MBUTTONUP, WM_RBUTTONDOWN, WM_RBUTTONUP, WM_SYSKEYDOWN, WM_SYSKEYUP,
+    WM_XBUTTONDOWN, WM_XBUTTONUP, XBUTTON1, XBUTTON2,
 };
 use winapi::um::winuser::{
     MSLLHOOKSTRUCT, WM_LBUTTONDBLCLK, WM_MBUTTONDBLCLK, WM_RBUTTONDBLCLK, WM_XBUTTONDBLCLK,
@@ -89,10 +89,13 @@ unsafe extern "system" fn mouse_hook(
     //   DWORD     time;
     //   ULONG_PTR dwExtraInfo;
     // } MSLLHOOKSTRUCT, *LPMSLLHOOKSTRUCT, *PMSLLHOOKSTRUCT;
+
     let data = &*(l_param as *const MSLLHOOKSTRUCT);
-    let maybe_x_button = if data.mouseData == u32::from(XBUTTON1) {
+    let x_button_param: u16 =
+        GET_XBUTTON_WPARAM(data.mouseData.try_into().expect("u32 fits usize"));
+    let maybe_x_button = if x_button_param == XBUTTON1 {
         Some(Mouse::Side)
-    } else if data.mouseData == u32::from(XBUTTON2) {
+    } else if x_button_param == XBUTTON2 {
         Some(Mouse::Extra)
     } else {
         None
