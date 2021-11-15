@@ -421,7 +421,7 @@ pub(crate) mod mimpl {
     }
 
     pub(crate) fn click_at(x: i32, y: i32, button: Mouse) {
-        Self::move_to(x, y);
-        Self::click(button);
+        move_to(x, y);
+        click(button);
     }
 }
