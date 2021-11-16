@@ -291,7 +291,9 @@ impl Registry {
     }
 
     pub fn maybe_log_event(&self, prefix: &str, event: Event) {
-        println!("Event: {} - {:?}. ts: {}", prefix, event, log_timestamp())
+        if self.debug_enabled.load(Ordering::Relaxed) {
+            println!("Event: {} - {:?}. ts: {}", prefix, event, log_timestamp())
+        }
     }
 
     pub fn print_pressed_state(&self) {
