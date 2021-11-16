@@ -1,6 +1,6 @@
 [package]
 name = "mki"
-version = "0.2.0"
+version = "0.2.1"
 description = "Windows and Linux library for registring global input hooks and simulating keyboard and mouse events."
 authors = ["fulara <ntszar@gmail.com>"]
 keywords = ["mouse", "keyboard", "input", "hook", "autohotkey"]
