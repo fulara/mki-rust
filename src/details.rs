@@ -116,7 +116,6 @@ impl Registry {
         let mut sequencer = self.sequencer.lock().unwrap();
         let sequencer = sequencer.get_or_insert({
             let (tx, rx) = mpsc::channel::<Box<dyn Fn() + Send + Sync>>();
-            thread::Builder::new();
             Sequencer {
                 _handle: thread::Builder::new()
                     .name("sequencer".into())
