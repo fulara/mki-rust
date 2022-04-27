@@ -59,7 +59,19 @@ fn handle_libinput_event(event: input::Event) {
                 }
             }
         }
-        input::Event::Pointer(pointer) => {
+        input::Event::Pointer(Button(button_event)) => {
+            if let Some(mapped) = mouse_code_to_key(button_event.button()) {
+                match button_event.button_state() {
+                    ButtonState::Pressed => {
+                        registry().event_down(Event::Mouse(mapped));
+                    }
+                    ButtonState::Released => {
+                        registry().event_up(Event::Mouse(mapped));
+                    }
+                }
+            }
+        }
+        input::Event::Pointer(_) => {
             // This one gets invoked but it seems pretty useless
             // if let Motion(motion_event) = &pointer {
             //     println!("1 {} {}", motion_event.dx(), motion_event.dy());
@@ -67,18 +79,6 @@ fn handle_libinput_event(event: input::Event) {
             // if let MotionAbsolute(motion_event) = &pointer {
             // Unfortunatelly this one does not get invoked?
             // }
-            if let Button(button_event) = &pointer {
-                if let Some(mapped) = mouse_code_to_key(button_event.button()) {
-                    match button_event.button_state() {
-                        ButtonState::Pressed => {
-                            registry().event_down(Event::Mouse(mapped));
-                        }
-                        ButtonState::Released => {
-                            registry().event_up(Event::Mouse(mapped));
-                        }
-                    }
-                }
-            }
         }
         input::Event::Touch(_) => { /*println!("touch")*/ }
         input::Event::Tablet(_) => { /*println!("touch2")*/ }
