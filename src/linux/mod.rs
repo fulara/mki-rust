@@ -34,7 +34,7 @@ pub(crate) fn process_message() {
         }
     }
     let mut libinput = Libinput::new_with_udev(LibinputInterfaceRaw);
-    libinput.udev_assign_seat(&"seat0").unwrap();
+    libinput.udev_assign_seat("seat0").unwrap();
     let pollfd = PollFd::new(libinput.as_raw_fd(), PollFlags::POLLIN);
     while poll(&mut [pollfd], -1).is_ok() {
         libinput.dispatch().unwrap();
