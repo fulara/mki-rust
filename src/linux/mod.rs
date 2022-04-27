@@ -85,5 +85,6 @@ fn handle_libinput_event(event: input::Event) {
         input::Event::TabletPad(_) => { /*println!("touch3")*/ }
         input::Event::Gesture(_) => { /*println!("touch4")*/ }
         input::Event::Switch(_) => { /*println!("touch5")*/ }
+        _other => { /*println!("A different event={}", _other)*/ }
     }
 }
