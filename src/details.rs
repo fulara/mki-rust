@@ -23,22 +23,22 @@ struct Sequencer {
 }
 
 #[derive(Default)]
-struct Pressed {
+pub struct Pressed {
     pressed: Vec<Event>,
     pressed_keys: Vec<Keyboard>,
 }
 
 impl Pressed {
-    pub(crate) fn is_pressed(&self, event: Event) -> bool {
+    pub fn is_pressed(&self, event: Event) -> bool {
         self.pressed.contains(&event)
     }
 
     // Order matters intentionally here.
-    pub(crate) fn are_pressed(&self, keys: &[Keyboard]) -> bool {
+    pub fn are_pressed(&self, keys: &[Keyboard]) -> bool {
         self.pressed_keys == keys
     }
 
-    fn pressed(&mut self, event: Event) {
+    pub fn pressed(&mut self, event: Event) {
         if !self.pressed.contains(&event) {
             self.pressed.push(event);
 
@@ -48,7 +48,12 @@ impl Pressed {
         }
     }
 
-    fn released(&mut self, event: Event) {
+    pub fn clear(&mut self) {
+        self.pressed.clear();
+        self.pressed_keys.clear();
+    }
+
+    pub fn released(&mut self, event: Event) {
         if let Some(index) = self.pressed.iter().position(|e| *e == event) {
             self.pressed.remove(index);
 

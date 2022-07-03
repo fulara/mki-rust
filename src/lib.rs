@@ -1,4 +1,4 @@
-pub(crate) mod details;
+pub mod details;
 
 mod keyboard;
 #[cfg(target_os = "linux")]
