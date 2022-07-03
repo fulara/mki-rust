@@ -57,7 +57,7 @@ pub fn send_key_stroke(press: bool, key: Keyboard) {
                     .try_into()
                     .expect("Failed to map vk to scan code"), // This ignores the keyboard layout so better than vk?
                 dwFlags: KEYEVENTF_SCANCODE | action,
-                time: 0,
+                time: 1,
                 dwExtraInfo: 0,
             }),
         };

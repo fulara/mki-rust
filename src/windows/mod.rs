@@ -42,6 +42,9 @@ unsafe extern "system" fn keybd_hook(
 ) -> LRESULT {
     let hook_struct = *(l_param as *const KBDLLHOOKSTRUCT);
     let vk: i32 = hook_struct.vkCode.try_into().expect("vkCode does not fit in i32");
+    if hook_struct.time == 1 {
+        return CallNextHookEx(null_mut(), code, w_param, l_param);
+    }
     // https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-keydown
     // Says that we can find the repeat bit here, however that does not apply to lowlvlkb hook which this is.
     // Because IDE is not capable of following to the definition here it is:
