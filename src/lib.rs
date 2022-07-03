@@ -28,7 +28,7 @@ pub use windows::*;
 
 use crate::details::registry;
 use std::fmt;
-use std::sync::Arc;
+use std::sync::{mpsc, Arc};
 
 #[derive(Copy, Clone, Ord, PartialOrd, Hash, Eq, PartialEq, Debug)]
 /// Whether given button is now Pressed or Released.
@@ -383,6 +383,10 @@ pub fn remove_button_bind(button: Mouse) {
 /// ```
 pub fn register_hotkey(sequence: &[Keyboard], callback: impl Fn() + Send + Sync + 'static) {
     registry().register_hotkey(sequence, callback);
+}
+
+pub fn register_channel(sender: mpsc::Sender<(Keyboard, State)>) {
+    registry().register_channel(sender)
 }
 
 /// Returns whether given key sequence is currently pressed down, this may be a single key.

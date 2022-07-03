@@ -2,6 +2,7 @@ use crate::{install_hooks, process_message, Action, Event, Mouse, State};
 use crate::{InhibitEvent, Keyboard};
 use std::collections::HashMap;
 use std::fmt::Write;
+use std::ops::DerefMut;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
@@ -68,6 +69,7 @@ pub(crate) struct Registry {
     pub(crate) button_callbacks: Mutex<HashMap<Mouse, Arc<Action>>>,
     pub(crate) any_key_callback: Mutex<Option<Arc<Action>>>,
     pub(crate) any_button_callback: Mutex<Option<Arc<Action>>>,
+    pub(crate) channel: Mutex<Option<mpsc::Sender<(Keyboard, State)>>>,
     #[allow(clippy::type_complexity)]
     pub(crate) hotkeys: Mutex<HashMap<Vec<Keyboard>, Arc<Box<dyn Fn() + Send + Sync + 'static>>>>,
     #[allow(clippy::type_complexity)]
@@ -91,6 +93,7 @@ impl Registry {
             button_callbacks: Mutex::new(HashMap::new()),
             any_key_callback: Mutex::new(None),
             any_button_callback: Mutex::new(None),
+            channel: Mutex::new(None),
             _handle: thread::Builder::new()
                 .name("mki-lstn".into())
                 .spawn(|| {
@@ -163,6 +166,15 @@ impl Registry {
     pub(crate) fn event_down(&self, event: Event) -> InhibitEvent {
         self.maybe_log_event("down", event);
         self.pressed.lock().unwrap().pressed(event);
+        let state = State::Pressed;
+        if let Event::Keyboard(event) = event {
+            if let Some(channel) = self.channel.lock().unwrap().deref_mut() {
+                channel
+                    .send((event, state))
+                    .expect("here we need to take it out.. later");
+                return InhibitEvent::Yes;
+            }
+        }
         let mut callbacks = Vec::new();
         if let Event::Keyboard(key) = event {
             for (sequence, callback) in self.hotkeys.lock().unwrap().iter() {
@@ -177,7 +189,6 @@ impl Registry {
             // Should we not invoke actions if there is any hotkey present?
             thread::spawn(move || callback());
         }
-        let state = State::Pressed;
         let mut inhibit = InhibitEvent::No;
         let (global_action, key_action) = self.map_event_to_actions(event);
         if let Some(action) = global_action {
@@ -196,6 +207,14 @@ impl Registry {
         self.maybe_log_event("up", event);
         self.pressed.lock().unwrap().released(event);
         let state = State::Released;
+        if let Event::Keyboard(event) = event {
+            if let Some(channel) = self.channel.lock().unwrap().deref_mut() {
+                channel
+                    .send((event, state))
+                    .expect("here we need to take it out.. later");
+                return InhibitEvent::Yes;
+            }
+        }
         let (global_action, key_action) = self.map_event_to_actions(event);
         if let Some(action) = global_action {
             self.invoke_action(action, event, state);
@@ -247,6 +266,10 @@ impl Registry {
         } else {
             hotkeys.insert(sequence.to_vec(), Arc::new(Box::new(handler)));
         };
+    }
+
+    pub(crate) fn register_channel(&self, sender: mpsc::Sender<(Keyboard, State)>) {
+        *self.channel.lock().unwrap() = Some(sender);
     }
 
     pub(crate) fn unregister_hotkey(&self, sequence: &[Keyboard]) {
