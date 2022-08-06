@@ -144,6 +144,8 @@ atm I don't have multi screens so hard to test.
 * Add a debug mode - --debug that prints whenever anything that has registered hotkey is clicked
 
 # Changelog
+#### 0.2.2
+* Deps update, fixed some issues with linux #3
 #### 0.2 release:
 * Mouse to support location.
 * Windows to support mouse live tracking callback.
