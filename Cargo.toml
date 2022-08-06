@@ -5,10 +5,10 @@ description = "Windows and Linux library for registring global input hooks and s
 authors = ["fulara <ntszar@gmail.com>"]
 keywords = ["mouse", "keyboard", "input", "hook", "autohotkey"]
 readme = "README.md"
-homepage = "https://github.com/fulara/mki-rs"
-repository = "https://github.com/fulara/mki-rs"
+homepage = "https://github.com/fulara/mki-rust"
+repository = "https://github.com/fulara/mki-rust"
 categories = ["api-bindings"]
-documentation = "https://docs.rs/mki-rs"
+documentation = "https://docs.rs/mki-rust"
 license = "MIT"
 edition = "2018"
 
