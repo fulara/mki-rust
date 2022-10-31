@@ -1,10 +1,7 @@
+use std::mem;
 use crate::Mouse;
-use std::mem::{size_of, transmute_copy};
-use winapi::um::winuser::{
-    SendInput, INPUT, INPUT_MOUSE, LPINPUT, MOUSEEVENTF_ABSOLUTE, MOUSEEVENTF_LEFTDOWN,
-    MOUSEEVENTF_LEFTUP, MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_RIGHTDOWN,
-    MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_XDOWN, MOUSEEVENTF_XUP, MOUSEINPUT, XBUTTON1, XBUTTON2,
-};
+use std::mem::{size_of};
+use winapi::um::winuser::{SendInput, INPUT, INPUT_MOUSE, LPINPUT, MOUSEEVENTF_ABSOLUTE, MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP, MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_XDOWN, MOUSEEVENTF_XUP, MOUSEINPUT, XBUTTON1, XBUTTON2, INPUT_u};
 
 pub(crate) mod mimpl {
     use crate::windows::mouse::{
@@ -77,16 +74,18 @@ fn mouse_interact_with(mut interaction: u32, mouse_data: u16, pos: Option<Pos>) 
         y = pos.y;
     }
     unsafe {
+        let mut input: INPUT_u = mem::zeroed();
+        *input.mi_mut() = MOUSEINPUT {
+            dx: x,
+            dy: y,
+            mouseData: mouse_data.into(),
+            time: 0,
+            dwFlags: interaction,
+            dwExtraInfo: 0,
+        };
         let mut x = INPUT {
             type_: INPUT_MOUSE,
-            u: transmute_copy(&MOUSEINPUT {
-                dx: x,
-                dy: y,
-                mouseData: mouse_data.into(),
-                time: 0,
-                dwFlags: interaction,
-                dwExtraInfo: 0,
-            }),
+            u: input,
         };
 
         SendInput(1, &mut x as LPINPUT, size_of::<INPUT>() as libc::c_int);
