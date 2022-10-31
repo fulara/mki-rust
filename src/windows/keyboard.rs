@@ -1,19 +1,8 @@
 use crate::Keyboard;
 use std::convert::TryInto;
-use std::mem::{size_of, transmute_copy};
+use std::mem::{size_of};
 use winapi::shared::minwindef::WORD;
-use winapi::um::winuser::{
-    MapVirtualKeyW, SendInput, INPUT, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP,
-    KEYEVENTF_SCANCODE, LPINPUT, VK_ADD, VK_BACK, VK_CAPITAL, VK_DECIMAL, VK_DELETE, VK_DIVIDE,
-    VK_DOWN, VK_ESCAPE, VK_F1, VK_F10, VK_F11, VK_F12, VK_F13, VK_F14, VK_F15, VK_F16, VK_F17,
-    VK_F18, VK_F19, VK_F2, VK_F20, VK_F21, VK_F22, VK_F23, VK_F24, VK_F3, VK_F4, VK_F5, VK_F6,
-    VK_F7, VK_F8, VK_F9, VK_HOME, VK_INSERT, VK_LCONTROL, VK_LEFT, VK_LMENU, VK_LSHIFT, VK_LWIN,
-    VK_MULTIPLY, VK_NEXT, VK_NUMLOCK, VK_NUMPAD0, VK_NUMPAD1, VK_NUMPAD2, VK_NUMPAD3, VK_NUMPAD4,
-    VK_NUMPAD5, VK_NUMPAD6, VK_NUMPAD7, VK_NUMPAD8, VK_NUMPAD9, VK_OEM_1, VK_OEM_2, VK_OEM_3,
-    VK_OEM_4, VK_OEM_5, VK_OEM_6, VK_OEM_7, VK_OEM_COMMA, VK_OEM_PERIOD, VK_PRINT, VK_PRIOR,
-    VK_RCONTROL, VK_RETURN, VK_RIGHT, VK_RMENU, VK_RSHIFT, VK_RWIN, VK_SCROLL, VK_SEPARATOR,
-    VK_SNAPSHOT, VK_SPACE, VK_SUBTRACT, VK_TAB, VK_UP,
-};
+use winapi::um::winuser::{MapVirtualKeyW, SendInput, INPUT, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP, KEYEVENTF_SCANCODE, LPINPUT, VK_ADD, VK_BACK, VK_CAPITAL, VK_DECIMAL, VK_DELETE, VK_DIVIDE, VK_DOWN, VK_ESCAPE, VK_F1, VK_F10, VK_F11, VK_F12, VK_F13, VK_F14, VK_F15, VK_F16, VK_F17, VK_F18, VK_F19, VK_F2, VK_F20, VK_F21, VK_F22, VK_F23, VK_F24, VK_F3, VK_F4, VK_F5, VK_F6, VK_F7, VK_F8, VK_F9, VK_HOME, VK_INSERT, VK_LCONTROL, VK_LEFT, VK_LMENU, VK_LSHIFT, VK_LWIN, VK_MULTIPLY, VK_NEXT, VK_NUMLOCK, VK_NUMPAD0, VK_NUMPAD1, VK_NUMPAD2, VK_NUMPAD3, VK_NUMPAD4, VK_NUMPAD5, VK_NUMPAD6, VK_NUMPAD7, VK_NUMPAD8, VK_NUMPAD9, VK_OEM_1, VK_OEM_2, VK_OEM_3, VK_OEM_4, VK_OEM_5, VK_OEM_6, VK_OEM_7, VK_OEM_COMMA, VK_OEM_PERIOD, VK_PRINT, VK_PRIOR, VK_RCONTROL, VK_RETURN, VK_RIGHT, VK_RMENU, VK_RSHIFT, VK_RWIN, VK_SCROLL, VK_SEPARATOR, VK_SNAPSHOT, VK_SPACE, VK_SUBTRACT, VK_TAB, VK_UP, INPUT_u};
 
 pub(crate) mod kimpl {
     use crate::windows::keyboard::{send_key_stroke, vk_code};
@@ -49,17 +38,20 @@ pub fn send_key_stroke(press: bool, key: Keyboard) {
         KEYEVENTF_KEYUP
     };
     unsafe {
+        let mut input_u: INPUT_u = std::mem::zeroed();
+        *input_u.ki_mut() = KEYBDINPUT {
+            wVk: 0,
+            wScan: MapVirtualKeyW(vk_code(key).into(), 0)
+                .try_into()
+                .expect("Failed to map vk to scan code"), // This ignores the keyboard layout so better than vk?
+            dwFlags: KEYEVENTF_SCANCODE | action,
+            time: 0,
+            dwExtraInfo: 0,
+        };
+
         let mut x = INPUT {
             type_: INPUT_KEYBOARD,
-            u: transmute_copy(&KEYBDINPUT {
-                wVk: 0,
-                wScan: MapVirtualKeyW(vk_code(key).into(), 0)
-                    .try_into()
-                    .expect("Failed to map vk to scan code"), // This ignores the keyboard layout so better than vk?
-                dwFlags: KEYEVENTF_SCANCODE | action,
-                time: 0,
-                dwExtraInfo: 0,
-            }),
+            u: input_u,
         };
 
         SendInput(1, &mut x as LPINPUT, size_of::<INPUT>() as libc::c_int);
