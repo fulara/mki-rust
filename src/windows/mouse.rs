@@ -1,7 +1,7 @@
 use std::mem;
 use crate::Mouse;
 use std::mem::{size_of};
-use winapi::um::winuser::{SendInput, INPUT, INPUT_MOUSE, LPINPUT, MOUSEEVENTF_ABSOLUTE, MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP, MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_XDOWN, MOUSEEVENTF_XUP, MOUSEINPUT, XBUTTON1, XBUTTON2, INPUT_u};
+use winapi::um::winuser::{SendInput, INPUT, INPUT_MOUSE, LPINPUT, MOUSEEVENTF_ABSOLUTE, MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP, MOUSEEVENTF_MIDDLEDOWN, MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_XDOWN, MOUSEEVENTF_XUP, MOUSEINPUT, XBUTTON1, XBUTTON2, INPUT_u, MOUSEEVENTF_MOVE};
 
 pub(crate) mod mimpl {
     use crate::windows::mouse::{
@@ -72,6 +72,7 @@ fn mouse_interact_with(mut interaction: u32, mouse_data: u16, pos: Option<Pos>) 
         }
         x = pos.x;
         y = pos.y;
+        interaction |= MOUSEEVENTF_MOVE;
     }
     unsafe {
         let mut input: INPUT_u = mem::zeroed();
