@@ -96,6 +96,7 @@ impl Mouse {
         mimpl::release(*self)
     }
 
+    // On windows this uses absolute coordinates 0;65535 see windows move_to impl note
     pub fn move_to(x: i32, y: i32) {
         mimpl::move_to(x, y)
     }

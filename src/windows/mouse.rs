@@ -27,10 +27,16 @@ pub(crate) mod mimpl {
         mouse_release(button);
     }
 
+    // normalized absolute coordinates between 0 and 65,535
+    // See remarks: https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-mouseinput#remarks
+    // For now the library does not support a solution of it - caller is expected to solve it for himself
+    // One of possible solutions would be to try to accept multiple parameters such as
+    // "Screen Index + position on that screen index, but hey that sounds a bit too complex. sorry.
     pub(crate) fn move_to(x: i32, y: i32) {
         mouse_interact_with(0, 0, Some(Pos::absolute(x, y)));
     }
 
+    // Unlike move_to this uses a human friendly coordinates, 10 is 10 pixels.
     pub(crate) fn move_by(x: i32, y: i32) {
         mouse_interact_with(0, 0, Some(Pos::relative(x, y)));
     }
