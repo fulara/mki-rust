@@ -117,6 +117,7 @@ pub enum Keyboard {
     Subtract,
     Decimal,
     Divide,
+    ThatThingy,
     Other(i32),
 }
 
@@ -187,7 +188,7 @@ impl FromStr for Keyboard {
             "RightWindows" => Keyboard::RightWindows,
             "Comma" | "," => Keyboard::Comma,
             "Period" | "." => Keyboard::Period,
-            "Slash" | "/" => Keyboard::Slash,
+            "Slash" | "/" | "?" => Keyboard::Slash,
             "SemiColon" | ";" | ":" => Keyboard::SemiColon,
             "Apostrophe" | "'" | "\"" => Keyboard::Apostrophe,
             "LeftBrace" | "[" => Keyboard::LeftBrace,
@@ -237,6 +238,7 @@ impl FromStr for Keyboard {
             "Subtract" => Keyboard::Subtract,
             "Decimal" => Keyboard::Decimal,
             "Divide" => Keyboard::Divide,
+            "<" | ">" => Keyboard::ThatThingy,
             _ => return Err(()),
         };
         Ok(parsed)

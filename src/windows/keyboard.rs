@@ -12,7 +12,7 @@ use winapi::um::winuser::{
     VK_NUMPAD5, VK_NUMPAD6, VK_NUMPAD7, VK_NUMPAD8, VK_NUMPAD9, VK_OEM_1, VK_OEM_2, VK_OEM_3,
     VK_OEM_4, VK_OEM_5, VK_OEM_6, VK_OEM_7, VK_OEM_COMMA, VK_OEM_PERIOD, VK_PRINT, VK_PRIOR,
     VK_RCONTROL, VK_RETURN, VK_RIGHT, VK_RMENU, VK_RSHIFT, VK_RWIN, VK_SCROLL, VK_SEPARATOR,
-    VK_SNAPSHOT, VK_SPACE, VK_SUBTRACT, VK_TAB, VK_UP,
+    VK_SNAPSHOT, VK_SPACE, VK_SUBTRACT, VK_TAB, VK_UP, VK_OEM_102
 };
 
 pub(crate) mod kimpl {
@@ -230,6 +230,7 @@ impl From<Keyboard> for i32 {
             BackwardSlash => VK_OEM_5,
             RightBrace => VK_OEM_6,
             Apostrophe => VK_OEM_7,
+            ThatThingy => VK_OEM_102
         }
     }
 }
